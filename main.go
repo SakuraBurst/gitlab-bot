@@ -31,7 +31,26 @@ func main() {
 			InsecureSkipVerify: true,
 		},
 	}
-	mrWithDiffs := parser.Parser("gpe/ais-upu/ais-upu-frontend", "ymrsGzzNEofRKhoX2f5G")
-	telegram.SendMessage(mrWithDiffs)
+	Wait()
+	//
 
+}
+
+func Wait() {
+	t := time.Now()
+	if t.Hour() != 12 {
+		waitFor := 0
+		if t.Hour() > 12 {
+			waitFor = 24 - t.Hour() + 12
+		} else {
+			waitFor = 12 - t.Hour()
+		}
+		time.Sleep(time.Hour * time.Duration(waitFor))
+		Wait()
+	} else {
+		mrWithDiffs := parser.Parser("gpe/ais-upu/ais-upu-frontend", "ymrsGzzNEofRKhoX2f5G")
+		telegram.SendMessage(mrWithDiffs)
+		time.Sleep(time.Hour * 24)
+		Wait()
+	}
 }
