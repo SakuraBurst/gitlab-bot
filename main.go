@@ -9,12 +9,14 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"text/template"
 	"time"
 
 	"github.com/SakuraBurst/gitlab-bot/models"
 )
 
 const OPENED = "opened"
+const CAN_BE_MERGED = "can_be_merged"
 
 func main() {
 	http.DefaultClient.Transport = &http.Transport{
@@ -63,15 +65,40 @@ func main() {
 		}
 
 	}
-	mergeRequestsWithChanges := make([]models.MergeRequestFileChanges, 0, len(mergeRequests))
+	mergeRequestsWithChanges := models.MergeRequests{Length: len(responseWaiters), On: time.Now(), MergeRequests: make([]models.MergeRequestFileChanges, 0, len(mergeRequests))}
 	for _, v := range responseWaiters {
-		m := <-v
-		mergeRequestsWithChanges = append(mergeRequestsWithChanges, m)
+		mergeRequestsWithChanges.MergeRequests = append(mergeRequestsWithChanges.MergeRequests, <-v)
 	}
+	temp := template.Must(template.New("mr").Funcs(template.FuncMap{
+		"humanTime":         humanTime,
+		"humanBool":         humanBool,
+		"humanBoolReverse":  humanBoolReverse,
+		"mergeStatusHelper": mergeStatusHelper}).Parse(`
+	Текущее количество открытых мрок на {{.On | humanTime}} - {{.Length}}
+	{{range .MergeRequests}}-------------------------------------
+	Название: {{.Title}}
+	Описание: {{.Description}}
+	Автор: {{.Author.Name}}
+	Создан: {{.CreatedAt | humanTime}}
+	Обновлен: {{.UpdatedAt | humanTime}}
+	ТаргетБранч: {{.TargetBranch}}
+	СоурсБранч: {{.SourceBranch}}
+	Есть ли конфликты: {{.HasConflicts | humanBoolReverse}}
+	Можно ли мержить: {{.MergeStatus | mergeStatusHelper}}
+	<a href="{{.WebUrl}}">Ссылка на мр</a>
+	Список изменений:
+	{{range .Changes}}
+	{{.OldPath}}
+	{{end}}
+	{{end}}
+	`))
+	buff := bytes.NewBuffer([]byte{})
+	temp.Execute(buff, mergeRequestsWithChanges)
+
 	testRequest := map[string]string{
 		"chat_id":    "@mrchicki",
-		"text":       mergeRequestsWithChanges[0].Description,
-		"parse_mode": "Markdown",
+		"text":       buff.String(),
+		"parse_mode": "html",
 	}
 	testBytes, err := json.Marshal(testRequest)
 	if err != nil {
@@ -123,4 +150,27 @@ func getMRDiffs(iid int, resChan chan models.MergeRequestFileChanges) {
 		log.Fatal(err)
 	}
 	resChan <- mrWithFileChanges
+}
+
+func humanTime(t time.Time) string {
+	return t.Format(time.RFC822)
+}
+
+func humanBool(b bool) string {
+	if b {
+		return "Да ✔️"
+	}
+	return "Нет ❌"
+}
+
+func humanBoolReverse(b bool) string {
+	if b {
+		return "Да ❌"
+	}
+	return "Нет ✔️"
+}
+
+func mergeStatusHelper(s string) string {
+	fmt.Println(s)
+	return humanBool(s == CAN_BE_MERGED)
 }
