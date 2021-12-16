@@ -43,10 +43,8 @@ func main() {
 			InsecureSkipVerify: true,
 		},
 	}
-	// Wait()
 	logger.LoggerInit()
-	mrWithDiffs := parser.Parser(project, token, withDiffs)
-	telegram.SendMessage(mrWithDiffs, withDiffs)
+	Wait()
 	//
 
 }

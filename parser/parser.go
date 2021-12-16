@@ -34,9 +34,10 @@ func Parser(repo string, token string, withDiffs bool) models.MergeRequests {
 	}
 	responseWaiters := make([]chan models.MergeRequestFileChanges, 0, len(mergeRequests))
 	log.WithFields(log.Fields{"Количество мрок": len(mergeRequests)}).Info("парсер получил список мрок")
-	opendeMergeRequests := models.MergeRequests{Length: len(responseWaiters), On: time.Now(), MergeRequests: make([]models.MergeRequestFileChanges, 0, len(mergeRequests))}
+	opendeMergeRequests := models.MergeRequests{Length: 0, On: time.Now(), MergeRequests: make([]models.MergeRequestFileChanges, 0, len(mergeRequests))}
 	for _, v := range mergeRequests {
 		if v.State == OPENED {
+			opendeMergeRequests.Length++
 			if withDiffs {
 				responseWaiter := make(chan models.MergeRequestFileChanges)
 				responseWaiters = append(responseWaiters, responseWaiter)
