@@ -4,14 +4,25 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/SakuraBurst/gitlab-bot/logger"
 	"github.com/SakuraBurst/gitlab-bot/parser"
 	"github.com/SakuraBurst/gitlab-bot/telegram"
+	"github.com/joho/godotenv"
 )
 
-const CAN_BE_MERGED = "can_be_merged"
+var withDiffs = false
+var project = ""
+var token = ""
+
+func init() {
+	godotenv.Load()
+	withDiffs = os.Getenv("VIEW_CHANGES") == "true"
+	project = os.Getenv("PROJECT")
+	token = os.Getenv("TOKEN")
+}
 
 func main() {
 	http.DefaultClient.Transport = &http.Transport{
@@ -34,8 +45,8 @@ func main() {
 	}
 	// Wait()
 	logger.LoggerInit()
-	mrWithDiffs := parser.Parser("gpe/ais-upu/ais-upu-frontend", "ymrsGzzNEofRKhoX2f5G")
-	telegram.SendMessage(mrWithDiffs)
+	mrWithDiffs := parser.Parser(project, token, withDiffs)
+	telegram.SendMessage(mrWithDiffs, withDiffs)
 	//
 
 }
@@ -52,8 +63,8 @@ func Wait() {
 		time.Sleep(time.Hour * time.Duration(waitFor))
 		Wait()
 	} else {
-		mrWithDiffs := parser.Parser("gpe/ais-upu/ais-upu-frontend", "ymrsGzzNEofRKhoX2f5G")
-		telegram.SendMessage(mrWithDiffs)
+		mrWithDiffs := parser.Parser(project, token, withDiffs)
+		telegram.SendMessage(mrWithDiffs, withDiffs)
 		time.Sleep(time.Hour * 24)
 		Wait()
 	}

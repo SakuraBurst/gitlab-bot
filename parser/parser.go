@@ -13,7 +13,7 @@ import (
 
 const OPENED = "opened"
 
-func Parser(repo string, token string) models.MergeRequests {
+func Parser(repo string, token string, withDiffs bool) models.MergeRequests {
 	log.WithFields(log.Fields{"repo": repo}).Info("парсер начал работу")
 	request, err := http.NewRequest("GET", fmt.Sprintf("https://gitlab.innostage-group.ru/api/v4/projects/%s/merge_requests", url.QueryEscape(repo)), nil)
 	if err != nil {
@@ -34,19 +34,28 @@ func Parser(repo string, token string) models.MergeRequests {
 	}
 	responseWaiters := make([]chan models.MergeRequestFileChanges, 0, len(mergeRequests))
 	log.WithFields(log.Fields{"Количество мрок": len(mergeRequests)}).Info("парсер получил список мрок")
+	opendeMergeRequests := models.MergeRequests{Length: len(responseWaiters), On: time.Now(), MergeRequests: make([]models.MergeRequestFileChanges, 0, len(mergeRequests))}
 	for _, v := range mergeRequests {
 		if v.State == OPENED {
-			responseWaiter := make(chan models.MergeRequestFileChanges)
-			responseWaiters = append(responseWaiters, responseWaiter)
-			go getMRDiffs(v.Iid, responseWaiter, repo, token)
+			if withDiffs {
+				responseWaiter := make(chan models.MergeRequestFileChanges)
+				responseWaiters = append(responseWaiters, responseWaiter)
+				go getMRDiffs(v.Iid, responseWaiter, repo, token)
+			} else {
+				opendeMergeRequests.MergeRequests = append(opendeMergeRequests.MergeRequests, models.MergeRequestFileChanges{MergeRequestListItem: v, Changes: []models.FileChanges{}})
+
+			}
+
 		}
 
 	}
-	mergeRequestsWithChanges := models.MergeRequests{Length: len(responseWaiters), On: time.Now(), MergeRequests: make([]models.MergeRequestFileChanges, 0, len(mergeRequests))}
-	for _, v := range responseWaiters {
-		mergeRequestsWithChanges.MergeRequests = append(mergeRequestsWithChanges.MergeRequests, <-v)
+	if withDiffs {
+		for _, v := range responseWaiters {
+			opendeMergeRequests.MergeRequests = append(opendeMergeRequests.MergeRequests, <-v)
+		}
 	}
-	return mergeRequestsWithChanges
+
+	return opendeMergeRequests
 }
 
 func getMRDiffs(iid int, resChan chan models.MergeRequestFileChanges, repo, token string) {

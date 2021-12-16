@@ -10,10 +10,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendMessage(mrWithDiffs models.MergeRequests) {
+func SendMessage(mergeRequests models.MergeRequests, withDiffs bool) {
 
 	buff := bytes.NewBuffer([]byte{})
-	templates.TelegramMessageTemplate.Execute(buff, mrWithDiffs)
+	if withDiffs {
+		templates.TelegramMessageTemplateWithDiffs.Execute(buff, mergeRequests)
+	} else {
+		templates.TelegramMessageTemplateWithoutDiffs.Execute(buff, mergeRequests)
+	}
 
 	tgRequest := map[string]string{
 		"chat_id":    "@mrchicki",
