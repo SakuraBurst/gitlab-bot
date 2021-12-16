@@ -11,6 +11,7 @@ import (
 	"github.com/SakuraBurst/gitlab-bot/parser"
 	"github.com/SakuraBurst/gitlab-bot/telegram"
 	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 )
 
 var withDiffs = false
@@ -58,11 +59,13 @@ func Wait() {
 		} else {
 			waitFor = 12 - t.Hour()
 		}
+		log.WithField("current time", t).Infof("sleep for %d hour(s)", waitFor)
 		time.Sleep(time.Hour * time.Duration(waitFor))
 		Wait()
 	} else {
 		mrWithDiffs := parser.Parser(project, token, withDiffs)
 		telegram.SendMessage(mrWithDiffs, withDiffs)
+		log.WithField("current time", t).Info("sleep for 24 hours")
 		time.Sleep(time.Hour * 24)
 		Wait()
 	}
