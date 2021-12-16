@@ -45,6 +45,7 @@ func main() {
 		},
 	}
 	logger.LoggerInit()
+	log.WithFields(log.Fields{"withDiffs": withDiffs, "project": project, "token": token}).Info("Проект инициализирован")
 	Wait()
 	//
 
