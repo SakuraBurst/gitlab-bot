@@ -65,7 +65,7 @@ func Wait() {
 	} else {
 		mrWithDiffs := parser.Parser(project, token, withDiffs)
 		telegram.SendMessage(mrWithDiffs, withDiffs)
-		log.WithField("current time", t).Info("sleep for 24 hours")
+		log.WithField("текущее время", t).Info("sleep for 24 hours")
 		time.Sleep(time.Hour * 24)
 		Wait()
 	}
