@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func SendMessage(mergeRequests models.MergeRequests, withDiffs bool) {
+func SendMessage(mergeRequests models.MergeRequests, withDiffs bool, channel, token string) {
 
 	buff := bytes.NewBuffer([]byte{})
 	if withDiffs {
@@ -20,7 +20,7 @@ func SendMessage(mergeRequests models.MergeRequests, withDiffs bool) {
 	}
 
 	tgRequest := map[string]string{
-		"chat_id":    "@mrchicki",
+		"chat_id":    "@" + channel,
 		"text":       buff.String(),
 		"parse_mode": "html",
 	}
@@ -31,7 +31,7 @@ func SendMessage(mergeRequests models.MergeRequests, withDiffs bool) {
 		log.Fatal(err)
 	}
 	reader := bytes.NewReader(testBytes)
-	respon, err := http.Post("https://api.telegram.org/bot5021252898:AAFJr-XK1_pTKNEW3Ju7tvT-z1VOb75zycw/sendMessage", "application/json", reader)
+	respon, err := http.Post("https://api.telegram.org/bot"+token+"/sendMessage", "application/json", reader)
 	if err != nil {
 		log.Fatal(err)
 	}

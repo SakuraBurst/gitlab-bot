@@ -16,13 +16,17 @@ import (
 
 var withDiffs = false
 var project = ""
-var token = ""
+var gitlabToken = ""
+var telegramChanel = ""
+var telegramBotToken = ""
 
 func init() {
 	godotenv.Load()
 	withDiffs = os.Getenv("VIEW_CHANGES") == "true"
 	project = os.Getenv("PROJECT")
-	token = os.Getenv("TOKEN")
+	gitlabToken = os.Getenv("GITLAB_TOKEN")
+	telegramChanel = os.Getenv("TELEGRAM_CHANEL")
+	telegramBotToken = os.Getenv("TELEGRAM_BOT_TOKEN")
 }
 
 func main() {
@@ -45,7 +49,13 @@ func main() {
 		},
 	}
 	logger.LoggerInit()
-	log.WithFields(log.Fields{"withDiffs": withDiffs, "project": project, "token": token}).Info("Проект инициализирован")
+	log.WithFields(log.Fields{
+		"with diffs":         withDiffs,
+		"project":            project,
+		"gitlab token":       gitlabToken,
+		"telegram chanel":    telegramChanel,
+		"telegram bot token": telegramBotToken,
+	}).Info("Проект инициализирован")
 	Wait()
 	//
 
@@ -64,8 +74,8 @@ func Wait() {
 		time.Sleep(time.Hour * time.Duration(waitFor))
 		Wait()
 	} else {
-		mrWithDiffs := parser.Parser(project, token, withDiffs)
-		telegram.SendMessage(mrWithDiffs, withDiffs)
+		mrWithDiffs := parser.Parser(project, gitlabToken, withDiffs)
+		telegram.SendMessage(mrWithDiffs, withDiffs, telegramChanel, telegramBotToken)
 		log.WithField("текущее время", t).Info("sleep for 24 hours")
 		time.Sleep(time.Hour * 24)
 		Wait()
