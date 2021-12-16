@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/SakuraBurst/gitlab-bot/logger"
 	"github.com/SakuraBurst/gitlab-bot/parser"
 	"github.com/SakuraBurst/gitlab-bot/telegram"
 )
@@ -31,7 +32,10 @@ func main() {
 			InsecureSkipVerify: true,
 		},
 	}
-	Wait()
+	// Wait()
+	logger.LoggerInit()
+	mrWithDiffs := parser.Parser("gpe/ais-upu/ais-upu-frontend", "ymrsGzzNEofRKhoX2f5G")
+	telegram.SendMessage(mrWithDiffs)
 	//
 
 }

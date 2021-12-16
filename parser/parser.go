@@ -3,17 +3,18 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/SakuraBurst/gitlab-bot/models"
+	log "github.com/sirupsen/logrus"
 )
 
 const OPENED = "opened"
 
 func Parser(repo string, token string) models.MergeRequests {
+	log.WithFields(log.Fields{"repo": repo}).Info("парсер начал работу")
 	request, err := http.NewRequest("GET", fmt.Sprintf("https://gitlab.innostage-group.ru/api/v4/projects/%s/merge_requests", url.QueryEscape(repo)), nil)
 	if err != nil {
 		log.Fatal(err)
@@ -22,7 +23,7 @@ func Parser(repo string, token string) models.MergeRequests {
 
 	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	defer resp.Body.Close()
 	decoder := json.NewDecoder(resp.Body)
@@ -32,6 +33,7 @@ func Parser(repo string, token string) models.MergeRequests {
 		log.Fatal(err)
 	}
 	responseWaiters := make([]chan models.MergeRequestFileChanges, 0, len(mergeRequests))
+	log.WithFields(log.Fields{"Количество мрок": len(mergeRequests)}).Info("парсер получил список мрок")
 	for _, v := range mergeRequests {
 		if v.State == OPENED {
 			responseWaiter := make(chan models.MergeRequestFileChanges)
@@ -48,6 +50,7 @@ func Parser(repo string, token string) models.MergeRequests {
 }
 
 func getMRDiffs(iid int, resChan chan models.MergeRequestFileChanges, repo, token string) {
+	log.WithFields(log.Fields{"iid": iid}).Info("получение отдельного открытого мр с доп даннымми")
 	request, err := http.NewRequest("GET", fmt.Sprintf("http://gitlab.innostage-group.ru/api/v4/projects/%s/merge_requests/%d/changes", url.QueryEscape(repo), iid), nil)
 	request.Header.Add("PRIVATE-TOKEN", token)
 	if err != nil {
@@ -64,8 +67,7 @@ func getMRDiffs(iid int, resChan chan models.MergeRequestFileChanges, repo, toke
 	if resp.StatusCode != http.StatusOK {
 		test := make(map[string]interface{})
 		decoder.Decode(&test)
-		fmt.Println(request.URL)
-		log.Fatal(test)
+		log.WithFields(log.Fields{"url": request.URL}).Fatal(test)
 	}
 
 	mrWithFileChanges := models.MergeRequestFileChanges{}
@@ -73,5 +75,6 @@ func getMRDiffs(iid int, resChan chan models.MergeRequestFileChanges, repo, toke
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.WithFields(log.Fields{"iid": iid, "mrWithFileChanges": mrWithFileChanges}).Info("мр успешно получен")
 	resChan <- mrWithFileChanges
 }

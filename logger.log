@@ -1,0 +1,42 @@
+{
+  "file": "D:/work/gitlab-bot/logger/logger.go:16",
+  "func": "github.com/SakuraBurst/gitlab-bot/logger.LoggerInit",
+  "level": "info",
+  "msg": "Логер инициализирован",
+  "time": "2021-12-15T19:36:10+03:00"
+}
+{
+  "file": "D:/work/gitlab-bot/parser/parser.go:17",
+  "func": "github.com/SakuraBurst/gitlab-bot/parser.Parser",
+  "level": "info",
+  "msg": "парсер начал работу",
+  "repo": "gpe/ais-upu/ais-upu-frontend",
+  "time": "2021-12-15T19:36:10+03:00"
+}
+{
+  "file": "D:/work/gitlab-bot/parser/parser.go:36",
+  "func": "github.com/SakuraBurst/gitlab-bot/parser.Parser",
+  "level": "info",
+  "msg": "парсер получил список мрок",
+  "time": "2021-12-15T19:36:11+03:00",
+  "Количество мрок": 20
+}
+{
+  "file": "D:/work/gitlab-bot/telegram/sendMessage.go:24",
+  "func": "github.com/SakuraBurst/gitlab-bot/telegram.SendMessage",
+  "level": "info",
+  "msg": "начата отправка сообщения в телеграм",
+  "tgRequest": {
+    "chat_id": "@mrchicki",
+    "parse_mode": "html",
+    "text": "\nТекущее количество открытых мрок на 15 Dec 21 19:36 MSK - 0\n\n"
+  },
+  "time": "2021-12-15T19:36:11+03:00"
+}
+{
+  "file": "D:/work/gitlab-bot/telegram/sendMessage.go:42",
+  "func": "github.com/SakuraBurst/gitlab-bot/telegram.SendMessage",
+  "level": "info",
+  "msg": "Сообщение успешно отправлено",
+  "time": "2021-12-15T19:36:11+03:00"
+}

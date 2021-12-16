@@ -3,24 +3,26 @@ package telegram
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/SakuraBurst/gitlab-bot/models"
 	"github.com/SakuraBurst/gitlab-bot/templates"
+	log "github.com/sirupsen/logrus"
 )
 
 func SendMessage(mrWithDiffs models.MergeRequests) {
+
 	buff := bytes.NewBuffer([]byte{})
 	templates.TelegramMessageTemplate.Execute(buff, mrWithDiffs)
 
-	testRequest := map[string]string{
+	tgRequest := map[string]string{
 		"chat_id":    "@mrchicki",
 		"text":       buff.String(),
 		"parse_mode": "html",
 	}
-	testBytes, err := json.Marshal(testRequest)
+
+	log.WithFields(log.Fields{"tgRequest": tgRequest}).Info("начата отправка сообщения в телеграм")
+	testBytes, err := json.Marshal(tgRequest)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,7 +37,7 @@ func SendMessage(mrWithDiffs models.MergeRequests) {
 	if respon.StatusCode != http.StatusOK {
 		test := make(map[string]interface{})
 		decoder.Decode(&test)
-		log.Fatal(test)
+		log.WithFields(log.Fields{"ошибка отправки в телеграм": test}).Fatal()
 	}
-	fmt.Println(respon.StatusCode)
+	log.Info("Сообщение успешно отправлено")
 }
