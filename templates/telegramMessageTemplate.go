@@ -58,7 +58,7 @@ func humanTime(t time.Time) string {
 
 func humanBool(b bool) string {
 	if b {
-		return "Да ✔️"
+		return "Да ✅"
 	}
 	return "Нет ❌"
 }
@@ -67,7 +67,7 @@ func humanBoolReverse(b bool) string {
 	if b {
 		return "Да ❌"
 	}
-	return "Нет ✔️"
+	return "Нет ✅"
 }
 
 func mergeStatusHelper(s string) string {
