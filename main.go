@@ -56,6 +56,9 @@ func main() {
 		"telegram chanel":    telegramChanel,
 		"telegram bot token": telegramBotToken,
 	}).Info("Проект инициализирован")
+	log.Info("начат первый тестовый прогон")
+	mrWithDiffs := parser.Parser(project, gitlabToken, withDiffs)
+	telegram.SendMessage(mrWithDiffs, withDiffs, telegramChanel, telegramBotToken)
 	Wait()
 	//
 
