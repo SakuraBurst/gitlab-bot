@@ -10,11 +10,14 @@ import (
 	"github.com/SakuraBurst/gitlab-bot/logger"
 	"github.com/SakuraBurst/gitlab-bot/parser"
 	"github.com/SakuraBurst/gitlab-bot/telegram"
+	"github.com/SakuraBurst/gitlab-bot/worker"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
 var withDiffs = false
+var withoutReminder = false
+var withoutNotifier = false
 var project = ""
 var gitlabToken = ""
 var telegramChanel = ""
@@ -23,6 +26,8 @@ var telegramBotToken = ""
 func init() {
 	godotenv.Load()
 	withDiffs = os.Getenv("VIEW_CHANGES") == "true"
+	withoutReminder = os.Getenv("WITHOUT_REMINDER") == "true"
+	withoutNotifier = os.Getenv("WITHOUT_NOTIFIER") == "true"
 	project = os.Getenv("PROJECT")
 	gitlabToken = os.Getenv("GITLAB_TOKEN")
 	telegramChanel = os.Getenv("TELEGRAM_CHANEL")
@@ -56,31 +61,29 @@ func main() {
 		"telegram chanel":    telegramChanel,
 		"telegram bot token": telegramBotToken,
 	}).Info("Проект инициализирован")
+
+	if withoutNotifier && withoutReminder {
+		log.SetOutput(os.Stderr)
+		log.Fatal("ну и чего ты ожидал? Без объявлялки и напоминалки это бот ничего не умеет делать")
+	}
 	log.Info("начат первый тестовый прогон")
-	mrWithDiffs := parser.Parser(project, gitlabToken, withDiffs)
-	telegram.SendMessage(mrWithDiffs, withDiffs, telegramChanel, telegramBotToken)
-	Wait()
+	mergeRequests, err := parser.Parser(project, gitlabToken, withDiffs)
+	if err != nil {
+		log.Fatal(err)
+	}
+	mergeRequests, _ = worker.OnlyNewMrs(mergeRequests)
+	telegram.SendMessage(mergeRequests, withDiffs, telegramChanel, telegramBotToken)
+	stop := make(chan bool)
+	if !withoutNotifier {
+		go worker.WaitFor24Hours(withDiffs, stop, project, gitlabToken, telegramChanel, telegramBotToken)
+	}
+	if !withoutReminder {
+		go worker.WaitForMinute(withDiffs, stop, project, gitlabToken, telegramChanel, telegramBotToken)
+	}
+
+	if <-stop {
+		log.Fatal("что-то пошло не так")
+	}
 	//
 
-}
-
-func Wait() {
-	t := time.Now()
-	if t.Hour() != 12 {
-		waitFor := 0
-		if t.Hour() > 12 {
-			waitFor = 24 - t.Hour() + 12
-		} else {
-			waitFor = 12 - t.Hour()
-		}
-		log.WithField("current time", t).Infof("sleep for %d hour(s)", waitFor)
-		time.Sleep(time.Hour * time.Duration(waitFor))
-		Wait()
-	} else {
-		mrWithDiffs := parser.Parser(project, gitlabToken, withDiffs)
-		telegram.SendMessage(mrWithDiffs, withDiffs, telegramChanel, telegramBotToken)
-		log.WithField("текущее время", t).Info("sleep for 24 hours")
-		time.Sleep(time.Hour * 24)
-		Wait()
-	}
 }

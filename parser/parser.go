@@ -13,37 +13,40 @@ import (
 
 const OPENED = "opened"
 
-func Parser(repo string, token string, withDiffs bool) models.MergeRequests {
+func Parser(repo string, token string, withDiffs bool) (models.MergeRequests, error) {
 	log.WithFields(log.Fields{"repo": repo}).Info("парсер начал работу")
 	request, err := http.NewRequest("GET", fmt.Sprintf("https://gitlab.innostage-group.ru/api/v4/projects/%s/merge_requests", url.QueryEscape(repo)), nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return models.MergeRequests{}, err
 	}
 	request.Header.Add("PRIVATE-TOKEN", token)
 
 	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
-		log.Panic(err)
+		log.Error(err)
+		return models.MergeRequests{}, err
 	}
 	defer resp.Body.Close()
 	decoder := json.NewDecoder(resp.Body)
 	mergeRequests := make([]models.MergeRequestListItem, 0)
 	err = decoder.Decode(&mergeRequests)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return models.MergeRequests{}, err
 	}
 	responseWaiters := make([]chan models.MergeRequestFileChanges, 0, len(mergeRequests))
 	log.WithFields(log.Fields{"Количество мрок": len(mergeRequests)}).Info("парсер получил список мрок")
-	opendeMergeRequests := models.MergeRequests{Length: 0, On: time.Now(), MergeRequests: make([]models.MergeRequestFileChanges, 0, len(mergeRequests))}
+	openedMergeRequests := models.MergeRequests{Length: 0, On: time.Now(), MergeRequests: make([]models.MergeRequestFileChanges, 0, len(mergeRequests))}
 	for _, v := range mergeRequests {
 		if v.State == OPENED {
-			opendeMergeRequests.Length++
+			openedMergeRequests.Length++
 			if withDiffs {
 				responseWaiter := make(chan models.MergeRequestFileChanges)
 				responseWaiters = append(responseWaiters, responseWaiter)
 				go getMRDiffs(v.Iid, responseWaiter, repo, token)
 			} else {
-				opendeMergeRequests.MergeRequests = append(opendeMergeRequests.MergeRequests, models.MergeRequestFileChanges{MergeRequestListItem: v, Changes: []models.FileChanges{}})
+				openedMergeRequests.MergeRequests = append(openedMergeRequests.MergeRequests, models.MergeRequestFileChanges{MergeRequestListItem: v, Changes: []models.FileChanges{}})
 
 			}
 
@@ -52,11 +55,11 @@ func Parser(repo string, token string, withDiffs bool) models.MergeRequests {
 	}
 	if withDiffs {
 		for _, v := range responseWaiters {
-			opendeMergeRequests.MergeRequests = append(opendeMergeRequests.MergeRequests, <-v)
+			openedMergeRequests.MergeRequests = append(openedMergeRequests.MergeRequests, <-v)
 		}
 	}
-
-	return opendeMergeRequests
+	log.WithFields(log.Fields{"Количество мрок со статусом opened": openedMergeRequests.Length}).Info("парсер закончил работу")
+	return openedMergeRequests, nil
 }
 
 func getMRDiffs(iid int, resChan chan models.MergeRequestFileChanges, repo, token string) {
