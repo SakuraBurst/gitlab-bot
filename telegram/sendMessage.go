@@ -20,7 +20,7 @@ func SendMessage(mergeRequests models.MergeRequests, withDiffs bool, channel, to
 	}
 
 	tgRequest := map[string]string{
-		"chat_id":    "@" + channel,
+		"chat_id":    channel,
 		"text":       buff.String(),
 		"parse_mode": "html",
 	}
