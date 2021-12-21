@@ -35,28 +35,29 @@ func Parser(repo string, token string, withDiffs bool) (models.MergeRequests, er
 		log.Error(err)
 		return models.MergeRequests{}, err
 	}
-	responseWaiters := make([]chan models.MergeRequestFileChanges, 0, len(mergeRequests))
+
 	log.WithFields(log.Fields{"Количество мрок": len(mergeRequests)}).Info("парсер получил список мрок")
 	openedMergeRequests := models.MergeRequests{Length: 0, On: time.Now(), MergeRequests: make([]models.MergeRequestFileChanges, 0, len(mergeRequests))}
 	for _, v := range mergeRequests {
 		if v.State == OPENED {
 			openedMergeRequests.Length++
-			if withDiffs {
-				responseWaiter := make(chan models.MergeRequestFileChanges)
-				responseWaiters = append(responseWaiters, responseWaiter)
-				go getMRDiffs(v.Iid, responseWaiter, repo, token)
-			} else {
-				openedMergeRequests.MergeRequests = append(openedMergeRequests.MergeRequests, models.MergeRequestFileChanges{MergeRequestListItem: v, Changes: []models.FileChanges{}})
-
-			}
-
+			openedMergeRequests.MergeRequests = append(openedMergeRequests.MergeRequests, models.MergeRequestFileChanges{MergeRequestListItem: v, Changes: []models.FileChanges{}})
 		}
 
 	}
 	if withDiffs {
-		for _, v := range responseWaiters {
-			openedMergeRequests.MergeRequests = append(openedMergeRequests.MergeRequests, <-v)
+		responseWaiters := make(chan models.MergeRequestFileChanges, openedMergeRequests.Length)
+		for _, v := range openedMergeRequests.MergeRequests {
+			go getMRDiffs(v.Iid, responseWaiters, repo, token)
 		}
+
+		openedMergeRequests = models.MergeRequests{Length: openedMergeRequests.Length, On: openedMergeRequests.On, MergeRequests: make([]models.MergeRequestFileChanges, 0, openedMergeRequests.Length)}
+
+		for i := 0; i < openedMergeRequests.Length; i++ {
+			openedMergeRequests.MergeRequests = append(openedMergeRequests.MergeRequests, <-responseWaiters)
+		}
+
+		close(responseWaiters)
 	}
 	log.WithFields(log.Fields{"Количество мрок со статусом opened": openedMergeRequests.Length}).Info("парсер закончил работу")
 	return openedMergeRequests, nil

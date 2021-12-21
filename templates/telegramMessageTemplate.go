@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"fmt"
 	"html/template"
 	"time"
 )
@@ -71,6 +70,5 @@ func humanBoolReverse(b bool) string {
 }
 
 func mergeStatusHelper(s string) string {
-	fmt.Println(s)
 	return humanBool(s == CAN_BE_MERGED)
 }
