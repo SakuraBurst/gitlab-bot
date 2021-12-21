@@ -30,7 +30,7 @@ func WaitFor24Hours(withDiffs bool, stop chan bool, project, gitlabToken, telegr
 				log.Error("gg")
 				stop <- true
 			}
-			telegram.SendMessage(mergeRequests, withDiffs, telegramChanel, telegramBotToken)
+			telegram.SendMessage(mergeRequests, false, withDiffs, telegramChanel, telegramBotToken)
 			log.Info("sleep for 24 hours")
 			time.Sleep(time.Hour * 24)
 		}
@@ -50,7 +50,7 @@ func WaitForMinute(withDiffs bool, stop chan bool, project, gitlabToken, telegra
 		mergeRequests, ok := OnlyNewMrs(mergeRequests)
 		log.WithFields(log.Fields{"Количество новых мрок": mergeRequests.Length, "Статус": ok}).Info("Ежеминутный обход")
 		if ok {
-			telegram.SendMessage(mergeRequests, withDiffs, telegramChanel, telegramBotToken)
+			telegram.SendMessage(mergeRequests, true, withDiffs, telegramChanel, telegramBotToken)
 
 		}
 	}

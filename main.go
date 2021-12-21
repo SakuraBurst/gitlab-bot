@@ -72,7 +72,7 @@ func main() {
 		log.Fatal(err)
 	}
 	mergeRequests, _ = worker.OnlyNewMrs(mergeRequests)
-	telegram.SendMessage(mergeRequests, withDiffs, telegramChanel, telegramBotToken)
+	telegram.SendMessage(mergeRequests, false, withDiffs, telegramChanel, telegramBotToken)
 	stop := make(chan bool)
 	if !withoutNotifier {
 		go worker.WaitFor24Hours(withDiffs, stop, project, gitlabToken, telegramChanel, telegramBotToken)
