@@ -24,16 +24,16 @@ var TelegramMessageTemplateWithoutDiffs = template.Must(template.New("mr").Funcs
 	"humanTime":         humanTime,
 	"humanBool":         humanBool,
 	"humanBoolReverse":  humanBoolReverse,
-	"mergeStatusHelper": mergeStatusHelper}).Parse(`
-Текущее количество открытых мрок на {{.On | humanTime}} - {{.Length}}
+	"mergeStatusHelper": mergeStatusHelper,
+	"lastUpdate":        lastUpdate,
+}).Parse(`
+Текущее количество открытых MR на {{.On | humanTime}} - {{.Length}}
 {{range .MergeRequests}}-------------------------------------
-Название: {{.Title}}
-Описание: {{.Description}}
+<b>{{.Title}}</b>, {{lastUpdate .CreatedAt .UpdatedAt }}, 
+<i>{{.Description}}</i>
 Автор: {{.Author.Name}}
-Создан: {{.CreatedAt | humanTime}}
-Обновлен: {{.UpdatedAt | humanTime}}
-ТаргетБранч: {{.TargetBranch}}
-СоурсБранч: {{.SourceBranch}}
+В ветку: {{.TargetBranch}}
+Из ветки: {{.SourceBranch}}
 Есть ли конфликты: {{.HasConflicts | humanBoolReverse}}
 Можно ли мержить: {{.MergeStatus | mergeStatusHelper}}
 <a href="{{.WebUrl}}">Ссылка на мр</a>
@@ -44,16 +44,16 @@ var TelegramMessageTemplateWithDiffs = template.Must(template.New("mr").Funcs(te
 	"humanTime":         humanTime,
 	"humanBool":         humanBool,
 	"humanBoolReverse":  humanBoolReverse,
-	"mergeStatusHelper": mergeStatusHelper}).Parse(`
-Текущее количество открытых мрок на {{.On | humanTime}} - {{.Length}}
+	"mergeStatusHelper": mergeStatusHelper,
+	"lastUpdate":        lastUpdate,
+}).Parse(`
+Текущее количество открытых MR на {{.On | humanTime}} - {{.Length}}
 {{range .MergeRequests}}-------------------------------------
-Название: {{.Title}}
-Описание: {{.Description}}
+<b>{{.Title}}</b>, {{lastUpdate .CreatedAt .UpdatedAt }}, 
+<i>{{.Description}}</i>
 Автор: {{.Author.Name}}
-Создан: {{.CreatedAt | humanTime}}
-Обновлен: {{.UpdatedAt | humanTime}}
-ТаргетБранч: {{.TargetBranch}}
-СоурсБранч: {{.SourceBranch}}
+В ветку: {{.TargetBranch}}
+Из ветки: {{.SourceBranch}}
 Есть ли конфликты: {{.HasConflicts | humanBoolReverse}}
 Можно ли мержить: {{.MergeStatus | mergeStatusHelper}}
 <a href="{{.WebUrl}}">Ссылка на мр</a>
@@ -65,7 +65,7 @@ var TelegramMessageTemplateWithDiffs = template.Must(template.New("mr").Funcs(te
 `))
 
 var TelegramMessageTemplateNewMrWithoutDiffs = template.Must(template.New("mr").Funcs(template.FuncMap{
-	"humanTime":         humanTime,
+	"lastUpdate":        lastUpdate,
 	"humanBool":         humanBool,
 	"humanBoolReverse":  humanBoolReverse,
 	"mergeStatusHelper": mergeStatusHelper,
@@ -73,13 +73,11 @@ var TelegramMessageTemplateNewMrWithoutDiffs = template.Must(template.New("mr").
 }).Parse(`
 {{.MergeRequests | newMrTitle}}
 {{range .MergeRequests}}-------------------------------------
-Название: {{.Title}}
-Описание: {{.Description}}
+<b>{{.Title}}</b>, {{lastUpdate .CreatedAt .UpdatedAt }}, 
+<i>{{.Description}}</i>
 Автор: {{.Author.Name}}
-Создан: {{.CreatedAt | humanTime}}
-Обновлен: {{.UpdatedAt | humanTime}}
-ТаргетБранч: {{.TargetBranch}}
-СоурсБранч: {{.SourceBranch}}
+В ветку: {{.TargetBranch}}
+Из ветки: {{.SourceBranch}}
 Есть ли конфликты: {{.HasConflicts | humanBoolReverse}}
 Можно ли мержить: {{.MergeStatus | mergeStatusHelper}}
 <a href="{{.WebUrl}}">Ссылка на мр</a>
@@ -87,7 +85,7 @@ var TelegramMessageTemplateNewMrWithoutDiffs = template.Must(template.New("mr").
 `))
 
 var TelegramMessageTemplateNewMrWithDiffs = template.Must(template.New("mr").Funcs(template.FuncMap{
-	"humanTime":         humanTime,
+	"lastUpdate":        lastUpdate,
 	"humanBool":         humanBool,
 	"humanBoolReverse":  humanBoolReverse,
 	"mergeStatusHelper": mergeStatusHelper,
@@ -95,13 +93,11 @@ var TelegramMessageTemplateNewMrWithDiffs = template.Must(template.New("mr").Fun
 }).Parse(`
 {{.MergeRequests | newMrTitle}}
 {{range .MergeRequests}}-------------------------------------
-Название: {{.Title}}
-Описание: {{.Description}}
+<b>{{.Title}}</b>, {{lastUpdate .CreatedAt .UpdatedAt }}, 
+<i>{{.Description}}</i>
 Автор: {{.Author.Name}}
-Создан: {{.CreatedAt | humanTime}}
-Обновлен: {{.UpdatedAt | humanTime}}
-ТаргетБранч: {{.TargetBranch}}
-СоурсБранч: {{.SourceBranch}}
+В ветку: {{.TargetBranch}}
+Из ветки: {{.SourceBranch}}
 Есть ли конфликты: {{.HasConflicts | humanBoolReverse}}
 Можно ли мержить: {{.MergeStatus | mergeStatusHelper}}
 <a href="{{.WebUrl}}">Ссылка на мр</a>
@@ -114,14 +110,21 @@ var TelegramMessageTemplateNewMrWithDiffs = template.Must(template.New("mr").Fun
 
 func newMrTitle(mrs []models.MergeRequestFileChanges) string {
 	if len(mrs) == 1 {
-		return "Новый МР"
+		return "Новый MR"
 	} else {
-		return "Новые МРы"
+		return "Новые MR'ы"
 	}
 }
 
+func lastUpdate(created, updated time.Time) string {
+	if updated.After(created) {
+		return humanTime(updated)
+	}
+	return humanTime(created)
+}
+
 func humanTime(t time.Time) string {
-	return t.Format(time.RFC822)
+	return t.Format("02.01.2006 15:04")
 }
 
 func humanBool(b bool) string {
