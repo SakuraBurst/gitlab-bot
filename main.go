@@ -32,9 +32,7 @@ func init() {
 	gitlabToken = os.Getenv("GITLAB_TOKEN")
 	telegramChanel = os.Getenv("TELEGRAM_CHANEL")
 	telegramBotToken = os.Getenv("TELEGRAM_BOT_TOKEN")
-}
 
-func main() {
 	http.DefaultClient.Transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -53,6 +51,9 @@ func main() {
 			InsecureSkipVerify: true,
 		},
 	}
+}
+
+func main() {
 	logger.LoggerInit()
 	log.WithFields(log.Fields{
 		"with diffs":         withDiffs,
