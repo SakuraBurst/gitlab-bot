@@ -22,6 +22,7 @@ var project = ""
 var gitlabToken = ""
 var telegramChanel = ""
 var telegramBotToken = ""
+var silent = false
 
 func init() {
 	godotenv.Load()
@@ -32,6 +33,7 @@ func init() {
 	gitlabToken = os.Getenv("GITLAB_TOKEN")
 	telegramChanel = os.Getenv("TELEGRAM_CHANEL")
 	telegramBotToken = os.Getenv("TELEGRAM_BOT_TOKEN")
+	silent = os.Getenv("SILENT_START") == "true"
 
 	http.DefaultClient.Transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -70,14 +72,17 @@ func main() {
 
 	git := gitlab.NewGitlabConn(withDiffs, project, gitlabToken)
 	tlBot := telegram.NewBot(telegramBotToken, telegramChanel)
-	tlBot.SendInitMessage("0.0.2")
-	log.Info("начат первый тестовый прогон")
-	mergeRequests, err := git.Parser()
-	if err != nil {
-		log.Fatal(err)
+	if !silent {
+		tlBot.SendInitMessage("0.0.2")
+		log.Info("начат первый тестовый прогон")
+		mergeRequests, err := git.Parser()
+		if err != nil {
+			log.Fatal(err)
+		}
+		mergeRequests, _ = worker.OnlyNewMrs(mergeRequests)
+		tlBot.SendMergeRequestMessage(mergeRequests, false, withDiffs)
 	}
-	mergeRequests, _ = worker.OnlyNewMrs(mergeRequests)
-	tlBot.SendMergeRequestMessage(mergeRequests, false, withDiffs)
+
 	stop := make(chan bool)
 	if !withoutNotifier {
 		go worker.WaitFor24Hours(stop, git, tlBot)
