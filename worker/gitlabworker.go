@@ -3,15 +3,16 @@ package worker
 import (
 	"time"
 
+	"github.com/SakuraBurst/gitlab-bot/gitlab"
 	"github.com/SakuraBurst/gitlab-bot/models"
-	"github.com/SakuraBurst/gitlab-bot/parser"
 	"github.com/SakuraBurst/gitlab-bot/telegram"
 	log "github.com/sirupsen/logrus"
 )
 
 var BASA_DANNIH_MY_SQL_POSTGRES_MONGO_PG_ADMIN_777 = make(map[int]bool)
 
-func WaitFor24Hours(withDiffs bool, stop chan bool, project, gitlabToken, telegramChanel, telegramBotToken string) {
+func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.TelegramBot) {
+	errorCounter := 0
 	for {
 		t := time.Now()
 		if t.Hour() != 12 {
@@ -25,12 +26,15 @@ func WaitFor24Hours(withDiffs bool, stop chan bool, project, gitlabToken, telegr
 			time.Sleep(time.Hour * time.Duration(waitFor))
 			continue
 		} else {
-			mergeRequests, err := parser.Parser(project, gitlabToken, withDiffs)
+			mergeRequests, err := glConn.Parser()
 			if err != nil {
 				log.Error("gg")
+				errorCounter++
+			}
+			if errorCounter == 100 {
 				stop <- true
 			}
-			telegram.SendMessage(mergeRequests, false, withDiffs, telegramChanel, telegramBotToken)
+			tlBot.SendMergeRequestMessage(mergeRequests, false, glConn.WithDiffs)
 			log.Info("sleep for 24 hours")
 			time.Sleep(time.Hour * 24)
 		}
@@ -38,20 +42,23 @@ func WaitFor24Hours(withDiffs bool, stop chan bool, project, gitlabToken, telegr
 
 }
 
-func WaitForMinute(withDiffs bool, stop chan bool, project, gitlabToken, telegramChanel, telegramBotToken string) {
+func WaitForMinute(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.TelegramBot) {
+	errorCounter := 0
 	for {
 		log.Info("sleep for 1 minute")
 		time.Sleep(time.Minute)
-		mergeRequests, err := parser.Parser(project, gitlabToken, withDiffs)
+		mergeRequests, err := glConn.Parser()
 		if err != nil {
 			log.Error("gg")
+			errorCounter++
+		}
+		if errorCounter == 100 {
 			stop <- true
 		}
 		mergeRequests, ok := OnlyNewMrs(mergeRequests)
 		log.WithFields(log.Fields{"Количество новых мрок": mergeRequests.Length, "Статус": ok}).Info("Ежеминутный обход")
 		if ok {
-			telegram.SendMessage(mergeRequests, true, withDiffs, telegramChanel, telegramBotToken)
-
+			tlBot.SendMergeRequestMessage(mergeRequests, true, glConn.WithDiffs)
 		}
 	}
 

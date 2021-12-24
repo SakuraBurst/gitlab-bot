@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/SakuraBurst/gitlab-bot/gitlab"
 	"github.com/SakuraBurst/gitlab-bot/logger"
-	"github.com/SakuraBurst/gitlab-bot/parser"
 	"github.com/SakuraBurst/gitlab-bot/telegram"
 	"github.com/SakuraBurst/gitlab-bot/worker"
 	"github.com/joho/godotenv"
@@ -67,19 +67,23 @@ func main() {
 		log.SetOutput(os.Stderr)
 		log.Fatal("ну и чего ты ожидал? Без объявлялки и напоминалки это бот ничего не умеет делать")
 	}
+
+	git := gitlab.NewGitlabConn(withDiffs, project, gitlabToken)
+	tlBot := telegram.NewBot(telegramBotToken, telegramChanel)
+	tlBot.SendInitMessage("0.0.2")
 	log.Info("начат первый тестовый прогон")
-	mergeRequests, err := parser.Parser(project, gitlabToken, withDiffs)
+	mergeRequests, err := git.Parser()
 	if err != nil {
 		log.Fatal(err)
 	}
 	mergeRequests, _ = worker.OnlyNewMrs(mergeRequests)
-	telegram.SendMessage(mergeRequests, false, withDiffs, telegramChanel, telegramBotToken)
+	tlBot.SendMergeRequestMessage(mergeRequests, false, withDiffs)
 	stop := make(chan bool)
 	if !withoutNotifier {
-		go worker.WaitFor24Hours(withDiffs, stop, project, gitlabToken, telegramChanel, telegramBotToken)
+		go worker.WaitFor24Hours(stop, git, tlBot)
 	}
 	if !withoutReminder {
-		go worker.WaitForMinute(withDiffs, stop, project, gitlabToken, telegramChanel, telegramBotToken)
+		go worker.WaitForMinute(stop, git, tlBot)
 	}
 
 	if <-stop {
