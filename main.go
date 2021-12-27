@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"github.com/joho/godotenv"
 	"net"
 	"net/http"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"github.com/SakuraBurst/gitlab-bot/logger"
 	"github.com/SakuraBurst/gitlab-bot/telegram"
 	"github.com/SakuraBurst/gitlab-bot/worker"
-	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -25,7 +25,9 @@ var telegramBotToken = ""
 var silent = false
 
 func init() {
-	godotenv.Load()
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(err)
+	}
 	withDiffs = os.Getenv("VIEW_CHANGES") == "true"
 	withoutReminder = os.Getenv("WITHOUT_REMINDER") == "true"
 	withoutNotifier = os.Getenv("WITHOUT_NOTIFIER") == "true"
@@ -56,7 +58,7 @@ func init() {
 }
 
 func main() {
-	logger.LoggerInit()
+	logger.Init()
 	log.WithFields(log.Fields{
 		"with diffs":         withDiffs,
 		"project":            project,

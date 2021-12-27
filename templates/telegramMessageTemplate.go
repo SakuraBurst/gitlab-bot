@@ -7,7 +7,7 @@ import (
 	"github.com/SakuraBurst/gitlab-bot/models"
 )
 
-const CAN_BE_MERGED = "can_be_merged"
+const CanBeMerged = "can_be_merged"
 
 func GetRightTemplate(isNewMrMessage, withDiffs bool) *template.Template {
 	if isNewMrMessage && withDiffs {
@@ -150,5 +150,5 @@ func humanBoolReverse(b bool) string {
 }
 
 func mergeStatusHelper(s string) string {
-	return humanBool(s == CAN_BE_MERGED)
+	return humanBool(s == CanBeMerged)
 }

@@ -1,10 +1,10 @@
 package telegram
 
-type TelegramBot struct {
+type Bot struct {
 	token       string
 	mainChannel string
 }
 
-func NewBot(token, mainChannel string) TelegramBot {
-	return TelegramBot{token: token, mainChannel: mainChannel}
+func NewBot(token, mainChannel string) Bot {
+	return Bot{token: token, mainChannel: mainChannel}
 }

@@ -9,9 +9,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var BASA_DANNIH_MY_SQL_POSTGRES_MONGO_PG_ADMIN_777 = make(map[int]bool)
+var BasaDannihMySqlPostgresMongoPgAdmin777 = make(map[int]bool)
 
-func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.TelegramBot) {
+func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
 	errorCounter := 0
 	for {
 		t := time.Now()
@@ -42,7 +42,7 @@ func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Telegra
 
 }
 
-func WaitForMinute(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.TelegramBot) {
+func WaitForMinute(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
 	errorCounter := 0
 	for {
 		log.Info("sleep for 1 minute")
@@ -64,18 +64,18 @@ func WaitForMinute(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Telegram
 
 }
 
-func OnlyNewMrs(allOpendeMergeRequests models.MergeRequests) (models.MergeRequests, bool) {
-	onlyNewMrs := models.MergeRequests{On: allOpendeMergeRequests.On}
-	if allOpendeMergeRequests.Length == 0 {
+func OnlyNewMrs(allOpenedMergeRequests models.MergeRequests) (models.MergeRequests, bool) {
+	onlyNewMrs := models.MergeRequests{On: allOpenedMergeRequests.On}
+	if allOpenedMergeRequests.Length == 0 {
 		return onlyNewMrs, false
 	}
 
-	for _, v := range allOpendeMergeRequests.MergeRequests {
-		if !BASA_DANNIH_MY_SQL_POSTGRES_MONGO_PG_ADMIN_777[v.Iid] {
+	for _, v := range allOpenedMergeRequests.MergeRequests {
+		if !BasaDannihMySqlPostgresMongoPgAdmin777[v.Iid] {
 			onlyNewMrs.MergeRequests = append(onlyNewMrs.MergeRequests, v)
 			onlyNewMrs.Length++
-			BASA_DANNIH_MY_SQL_POSTGRES_MONGO_PG_ADMIN_777[v.Iid] = true
-			log.WithField("basa", BASA_DANNIH_MY_SQL_POSTGRES_MONGO_PG_ADMIN_777).Infof("база данных поплнена айдишником %d", v.Iid)
+			BasaDannihMySqlPostgresMongoPgAdmin777[v.Iid] = true
+			log.WithField("basa", BasaDannihMySqlPostgresMongoPgAdmin777).Infof("база данных поплнена айдишником %d", v.Iid)
 		}
 	}
 	return onlyNewMrs, onlyNewMrs.Length > 0

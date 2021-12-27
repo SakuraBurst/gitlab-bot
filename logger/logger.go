@@ -6,7 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func LoggerInit() {
+func Init() {
 	log.SetReportCaller(true)
 	log.SetFormatter(&log.JSONFormatter{PrettyPrint: true})
 	f, err := os.OpenFile("logger.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)

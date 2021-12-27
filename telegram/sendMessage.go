@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (t TelegramBot) sendMessage(text string) {
+func (t Bot) sendMessage(text string) {
 	tgRequest := map[string]string{
 		"chat_id":    t.mainChannel,
 		"text":       text,
@@ -21,16 +21,23 @@ func (t TelegramBot) sendMessage(text string) {
 		log.Fatal(err)
 	}
 	reader := bytes.NewReader(testBytes)
-	respon, err := http.Post("https://api.telegram.org/bot"+t.token+"/sendMessage", "application/json", reader)
+	response, err := http.Post("https://api.telegram.org/bot"+t.token+"/sendMessage", "application/json", reader)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer respon.Body.Close()
-	decoder := json.NewDecoder(respon.Body)
+	defer func() {
+		if err := response.Body.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	decoder := json.NewDecoder(response.Body)
 
-	if respon.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusOK {
 		test := make(map[string]interface{})
-		decoder.Decode(&test)
+		err = decoder.Decode(&test)
+		if err != nil {
+			log.Panic(err)
+		}
 		log.WithFields(log.Fields{"ошибка отправки в телеграм": test}).Fatal()
 	}
 	log.Info("Сообщение успешно отправлено")
