@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/SakuraBurst/gitlab-bot/gitlab"
 	"github.com/SakuraBurst/gitlab-bot/logger"
-	"github.com/SakuraBurst/gitlab-bot/parser"
 	"github.com/SakuraBurst/gitlab-bot/telegram"
 	"github.com/SakuraBurst/gitlab-bot/worker"
 	"github.com/joho/godotenv"
@@ -22,6 +22,7 @@ var project = ""
 var gitlabToken = ""
 var telegramChanel = ""
 var telegramBotToken = ""
+var silent = false
 
 func init() {
 	godotenv.Load()
@@ -32,9 +33,8 @@ func init() {
 	gitlabToken = os.Getenv("GITLAB_TOKEN")
 	telegramChanel = os.Getenv("TELEGRAM_CHANEL")
 	telegramBotToken = os.Getenv("TELEGRAM_BOT_TOKEN")
-}
+	silent = os.Getenv("SILENT_START") == "true"
 
-func main() {
 	http.DefaultClient.Transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -53,6 +53,9 @@ func main() {
 			InsecureSkipVerify: true,
 		},
 	}
+}
+
+func main() {
 	logger.LoggerInit()
 	log.WithFields(log.Fields{
 		"with diffs":         withDiffs,
@@ -66,19 +69,26 @@ func main() {
 		log.SetOutput(os.Stderr)
 		log.Fatal("ну и чего ты ожидал? Без объявлялки и напоминалки это бот ничего не умеет делать")
 	}
-	log.Info("начат первый тестовый прогон")
-	mergeRequests, err := parser.Parser(project, gitlabToken, withDiffs)
-	if err != nil {
-		log.Fatal(err)
+
+	git := gitlab.NewGitlabConn(withDiffs, project, gitlabToken)
+	tlBot := telegram.NewBot(telegramBotToken, telegramChanel)
+	if !silent {
+		tlBot.SendInitMessage("0.0.2")
+		log.Info("начат первый тестовый прогон")
+		mergeRequests, err := git.Parser()
+		if err != nil {
+			log.Fatal(err)
+		}
+		mergeRequests, _ = worker.OnlyNewMrs(mergeRequests)
+		tlBot.SendMergeRequestMessage(mergeRequests, false, withDiffs)
 	}
-	mergeRequests, _ = worker.OnlyNewMrs(mergeRequests)
-	telegram.SendMessage(mergeRequests, false, withDiffs, telegramChanel, telegramBotToken)
+
 	stop := make(chan bool)
 	if !withoutNotifier {
-		go worker.WaitFor24Hours(withDiffs, stop, project, gitlabToken, telegramChanel, telegramBotToken)
+		go worker.WaitFor24Hours(stop, git, tlBot)
 	}
 	if !withoutReminder {
-		go worker.WaitForMinute(withDiffs, stop, project, gitlabToken, telegramChanel, telegramBotToken)
+		go worker.WaitForMinute(stop, git, tlBot)
 	}
 
 	if <-stop {

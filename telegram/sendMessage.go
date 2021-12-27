@@ -5,19 +5,13 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/SakuraBurst/gitlab-bot/models"
-	"github.com/SakuraBurst/gitlab-bot/templates"
 	log "github.com/sirupsen/logrus"
 )
 
-func SendMessage(mergeRequests models.MergeRequests, newMr, withDiffs bool, channel, token string) {
-
-	buff := bytes.NewBuffer(nil)
-	templates.GetRightTemplate(newMr, withDiffs).Execute(buff, mergeRequests)
-
+func (t TelegramBot) sendMessage(text string) {
 	tgRequest := map[string]string{
-		"chat_id":    channel,
-		"text":       buff.String(),
+		"chat_id":    t.mainChannel,
+		"text":       text,
 		"parse_mode": "html",
 	}
 
@@ -27,7 +21,7 @@ func SendMessage(mergeRequests models.MergeRequests, newMr, withDiffs bool, chan
 		log.Fatal(err)
 	}
 	reader := bytes.NewReader(testBytes)
-	respon, err := http.Post("https://api.telegram.org/bot"+token+"/sendMessage", "application/json", reader)
+	respon, err := http.Post("https://api.telegram.org/bot"+t.token+"/sendMessage", "application/json", reader)
 	if err != nil {
 		log.Fatal(err)
 	}
