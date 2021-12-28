@@ -90,7 +90,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		mergeRequests, _ = worker.OnlyNewMrs(mergeRequests)
+		worker.OnlyNewMrs(mergeRequests)
 	}
 
 	stop := make(chan bool)
