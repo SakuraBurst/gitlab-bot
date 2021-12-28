@@ -10,11 +10,12 @@ import (
 const CanBeMerged = "can_be_merged"
 
 func GetRightTemplate(isNewMrMessage, withDiffs bool) *template.Template {
-	if isNewMrMessage && withDiffs {
+	switch {
+	case isNewMrMessage && withDiffs:
 		return TelegramMessageTemplateNewMrWithDiffs
-	} else if isNewMrMessage && !withDiffs {
+	case isNewMrMessage && !withDiffs:
 		return TelegramMessageTemplateNewMrWithoutDiffs
-	} else if !isNewMrMessage && withDiffs {
+	case !isNewMrMessage && withDiffs:
 		return TelegramMessageTemplateWithDiffs
 	}
 	return TelegramMessageTemplateWithoutDiffs
@@ -38,7 +39,7 @@ var TelegramMessageTemplateWithoutDiffs = template.Must(template.New("mr").Funcs
 Есть ли конфликты: {{.HasConflicts | humanBoolReverse}}
 Можно ли мержить: {{.MergeStatus | mergeStatusHelper}}
 
-<a href="{{.WebUrl}}">Ссылка на MR</a>
+<a href="{{.WebURL}}">Ссылка на MR</a>
 {{end}}
 `))
 
@@ -60,7 +61,7 @@ var TelegramMessageTemplateWithDiffs = template.Must(template.New("mr").Funcs(te
 Есть ли конфликты: {{.HasConflicts | humanBoolReverse}}
 Можно ли мержить: {{.MergeStatus | mergeStatusHelper}}
 
-<a href="{{.WebUrl}}">Ссылка на MR</a>
+<a href="{{.WebURL}}">Ссылка на MR</a>
 Список изменений:
 {{range .Changes}}
 {{.OldPath}}
@@ -86,7 +87,7 @@ var TelegramMessageTemplateNewMrWithoutDiffs = template.Must(template.New("mr").
 Есть ли конфликты: {{.HasConflicts | humanBoolReverse}}
 Можно ли мержить: {{.MergeStatus | mergeStatusHelper}}
 
-<a href="{{.WebUrl}}">Ссылка на MR</a>
+<a href="{{.WebURL}}">Ссылка на MR</a>
 {{end}}
 `))
 
@@ -108,7 +109,7 @@ var TelegramMessageTemplateNewMrWithDiffs = template.Must(template.New("mr").Fun
 Есть ли конфликты: {{.HasConflicts | humanBoolReverse}}
 Можно ли мержить: {{.MergeStatus | mergeStatusHelper}}
 
-<a href="{{.WebUrl}}">Ссылка на MR</a>
+<a href="{{.WebURL}}">Ссылка на MR</a>
 Список изменений:
 {{range .Changes}}
 {{.OldPath}}
@@ -119,12 +120,13 @@ var TelegramMessageTemplateNewMrWithDiffs = template.Must(template.New("mr").Fun
 func newMrTitle(mrs []models.MergeRequestFileChanges) string {
 	if len(mrs) == 1 {
 		return "Новый MR"
-	} else {
-		return "Новые MR'ы"
 	}
+	return "Новые MR'ы"
 }
 
 func lastUpdate(created, updated time.Time) string {
+	created = created.Add(time.Hour * 3)
+	updated = updated.Add(time.Hour * 3)
 	if updated.After(created) {
 		return humanTime(updated)
 	}

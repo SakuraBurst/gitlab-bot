@@ -15,6 +15,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const True = "true"
+
 var withDiffs = false
 var withoutReminder = false
 var withoutNotifier = false
@@ -28,14 +30,14 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal(err)
 	}
-	withDiffs = os.Getenv("VIEW_CHANGES") == "true"
-	withoutReminder = os.Getenv("WITHOUT_REMINDER") == "true"
-	withoutNotifier = os.Getenv("WITHOUT_NOTIFIER") == "true"
+	withDiffs = os.Getenv("VIEW_CHANGES") == True
+	withoutReminder = os.Getenv("WITHOUT_REMINDER") == True
+	withoutNotifier = os.Getenv("WITHOUT_NOTIFIER") == True
 	project = os.Getenv("PROJECT")
 	gitlabToken = os.Getenv("GITLAB_TOKEN")
 	telegramChanel = os.Getenv("TELEGRAM_CHANEL")
 	telegramBotToken = os.Getenv("TELEGRAM_BOT_TOKEN")
-	silent = os.Getenv("SILENT_START") == "true"
+	silent = os.Getenv("SILENT_START") == True
 
 	http.DefaultClient.Transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -83,6 +85,12 @@ func main() {
 		}
 		mergeRequests, _ = worker.OnlyNewMrs(mergeRequests)
 		tlBot.SendMergeRequestMessage(mergeRequests, false, withDiffs)
+	} else {
+		mergeRequests, err := git.Parser()
+		if err != nil {
+			log.Fatal(err)
+		}
+		mergeRequests, _ = worker.OnlyNewMrs(mergeRequests)
 	}
 
 	stop := make(chan bool)

@@ -3,16 +3,16 @@ package models
 import "time"
 
 type Author struct {
-	Id        int    `json:"id"`
+	ID        int    `json:"id"`
 	Name      string `json:"name"`
 	UserName  string `json:"username"`
-	AvatarUrl string `json:"avatar_url"`
+	AvatarURL string `json:"avatar_url"`
 }
 
 type MergeRequestListItem struct {
-	Id           int       `json:"id"`
+	ID           int       `json:"id"`
 	Iid          int       `json:"iid"`
-	ProjectId    int       `json:"project_id"`
+	ProjectID    int       `json:"project_id"`
 	Title        string    `json:"title"`
 	Description  string    `json:"description"`
 	State        string    `json:"state"`
@@ -24,6 +24,6 @@ type MergeRequestListItem struct {
 	IsWip        bool      `json:"work_in_progress"`
 	MergeStatus  string    `json:"merge_status"`
 	Sha          string    `json:"sha"`
-	WebUrl       string    `json:"web_url"`
+	WebURL       string    `json:"web_url"`
 	HasConflicts bool      `json:"has_conflicts"`
 }

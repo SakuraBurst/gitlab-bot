@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var BasaDannihMySqlPostgresMongoPgAdmin777 = make(map[int]bool)
+var BasaDannihMySQLPostgresMongoPgAdmin777 = make(map[int]bool)
 
 func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
 	errorCounter := 0
@@ -71,11 +71,11 @@ func OnlyNewMrs(allOpenedMergeRequests models.MergeRequests) (models.MergeReques
 	}
 
 	for _, v := range allOpenedMergeRequests.MergeRequests {
-		if !BasaDannihMySqlPostgresMongoPgAdmin777[v.Iid] {
+		if !BasaDannihMySQLPostgresMongoPgAdmin777[v.Iid] {
 			onlyNewMrs.MergeRequests = append(onlyNewMrs.MergeRequests, v)
 			onlyNewMrs.Length++
-			BasaDannihMySqlPostgresMongoPgAdmin777[v.Iid] = true
-			log.WithField("basa", BasaDannihMySqlPostgresMongoPgAdmin777).Infof("база данных поплнена айдишником %d", v.Iid)
+			BasaDannihMySQLPostgresMongoPgAdmin777[v.Iid] = true
+			log.WithField("basa", BasaDannihMySQLPostgresMongoPgAdmin777).Infof("база данных поплнена айдишником %d", v.Iid)
 		}
 	}
 	return onlyNewMrs, onlyNewMrs.Length > 0
