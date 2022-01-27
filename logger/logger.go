@@ -14,5 +14,5 @@ func Init() {
 		log.SetOutput(f)
 	}
 	log.Info("Логер инициализирован")
-
+	log.SetLevel(log.WarnLevel)
 }
