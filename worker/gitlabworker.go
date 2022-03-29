@@ -15,6 +15,7 @@ func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
 	errorCounter := 0
 	for {
 		t := time.Now()
+
 		if t.Hour() != 12 {
 			waitFor := 0
 			if t.Hour() > 12 {
@@ -26,6 +27,10 @@ func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
 			time.Sleep(time.Hour * time.Duration(waitFor))
 			continue
 		} else {
+			if t.Weekday() == 0 || t.Weekday() == 6 {
+				time.Sleep(time.Hour * 24)
+				continue
+			}
 			mergeRequests, err := glConn.Parser()
 			if err != nil {
 				log.Error("gg")
