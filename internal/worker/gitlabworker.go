@@ -1,15 +1,14 @@
 package worker
 
 import (
+	"github.com/SakuraBurst/gitlab-bot/internal/helpers"
+	"github.com/SakuraBurst/gitlab-bot/pkg/gitlab"
+	"github.com/SakuraBurst/gitlab-bot/pkg/models"
+	"github.com/SakuraBurst/gitlab-bot/pkg/telegram"
 	"time"
 
-	"github.com/SakuraBurst/gitlab-bot/gitlab"
-	"github.com/SakuraBurst/gitlab-bot/models"
-	"github.com/SakuraBurst/gitlab-bot/telegram"
 	log "github.com/sirupsen/logrus"
 )
-
-var BasaDannihMySQLPostgresMongoPgAdmin777 = make(map[int]bool)
 
 func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
 	errorCounter := 0
@@ -31,7 +30,7 @@ func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
 				time.Sleep(time.Hour * 24)
 				continue
 			}
-			mergeRequests, err := glConn.Parser()
+			mergeRequests, err := glConn.MergeRequests()
 			if err != nil {
 				log.Error("gg")
 				errorCounter++
@@ -47,12 +46,12 @@ func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
 
 }
 
-func WaitForMinute(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
+func WaitForMinute(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot, bd models.BasaDannihMySQLPostgresMongoPgAdmin777) {
 	errorCounter := 0
 	for {
 		log.Info("sleep for 1 minute")
 		time.Sleep(time.Minute)
-		mergeRequests, err := glConn.Parser()
+		mergeRequests, err := glConn.MergeRequests()
 		if err != nil {
 			log.Error("gg")
 			errorCounter++
@@ -60,28 +59,11 @@ func WaitForMinute(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
 		if errorCounter == 100 {
 			stop <- true
 		}
-		mergeRequests, ok := OnlyNewMrs(mergeRequests)
+		mergeRequests, ok := helpers.OnlyNewMrs(mergeRequests, bd)
 		log.WithFields(log.Fields{"Количество новых мрок": mergeRequests.Length, "Статус": ok}).Info("Ежеминутный обход")
 		if ok {
 			tlBot.SendMergeRequestMessage(mergeRequests, true, glConn.WithDiffs)
 		}
 	}
 
-}
-
-func OnlyNewMrs(allOpenedMergeRequests models.MergeRequests) (models.MergeRequests, bool) {
-	onlyNewMrs := models.MergeRequests{On: allOpenedMergeRequests.On}
-	if allOpenedMergeRequests.Length == 0 {
-		return onlyNewMrs, false
-	}
-
-	for _, v := range allOpenedMergeRequests.MergeRequests {
-		if !BasaDannihMySQLPostgresMongoPgAdmin777[v.Iid] {
-			onlyNewMrs.MergeRequests = append(onlyNewMrs.MergeRequests, v)
-			onlyNewMrs.Length++
-			BasaDannihMySQLPostgresMongoPgAdmin777[v.Iid] = true
-			log.WithField("basa", BasaDannihMySQLPostgresMongoPgAdmin777).Infof("база данных поплнена айдишником %d", v.Iid)
-		}
-	}
-	return onlyNewMrs, onlyNewMrs.Length > 0
 }

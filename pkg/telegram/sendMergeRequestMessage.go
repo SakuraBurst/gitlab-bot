@@ -2,10 +2,9 @@ package telegram
 
 import (
 	"bytes"
+	"github.com/SakuraBurst/gitlab-bot/internal/templates"
+	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/SakuraBurst/gitlab-bot/models"
-	"github.com/SakuraBurst/gitlab-bot/templates"
 )
 
 func (t Bot) SendMergeRequestMessage(mergeRequests models.MergeRequests, newMr, withDiffs bool) {
@@ -13,5 +12,5 @@ func (t Bot) SendMergeRequestMessage(mergeRequests models.MergeRequests, newMr, 
 	if err := templates.GetRightTemplate(newMr, withDiffs).Execute(buff, mergeRequests); err != nil {
 		log.Fatal(err)
 	}
-	t.sendMessage(buff.String())
+	t.SendMessage(buff.String())
 }

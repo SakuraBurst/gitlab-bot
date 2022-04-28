@@ -4,14 +4,10 @@ WORKDIR /myapp
 
 COPY . .
 
-RUN go get
-
-RUN go install
-
-RUN go build
+RUN cd cmd/gitlab-bot && go get && go install && go build
 
 ENV TZ=Europe/Moscow
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-CMD ["/myapp/gitlab-bot"]
+CMD cmd/gitlab-bot/gitlab-bot

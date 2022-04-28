@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (t Bot) sendMessage(text string) {
+func (t Bot) SendMessage(text string) {
 	tgRequest := map[string]string{
 		"chat_id":    t.mainChannel,
 		"text":       text,

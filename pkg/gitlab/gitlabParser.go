@@ -3,17 +3,17 @@ package gitlab
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/SakuraBurst/gitlab-bot/models"
 	log "github.com/sirupsen/logrus"
 )
 
 const OPENED = "opened"
 
-func (g Gitlab) Parser() (models.MergeRequests, error) {
+func (g Gitlab) MergeRequests() (models.MergeRequests, error) {
 	log.WithFields(log.Fields{"repo": g.repo}).Info("парсер начал работу")
 	request, err := http.NewRequest("GET", fmt.Sprintf("https://gitlab.innostage-group.ru/api/v4/projects/%s/merge_requests", url.QueryEscape(g.repo)), nil)
 	if err != nil {
@@ -21,7 +21,7 @@ func (g Gitlab) Parser() (models.MergeRequests, error) {
 		return models.MergeRequests{}, err
 	}
 	request.Header.Add("PRIVATE-TOKEN", g.token)
-
+	log.Info(request.URL.String())
 	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
 		log.Error(err)

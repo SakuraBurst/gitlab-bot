@@ -1,10 +1,9 @@
 package templates
 
 import (
+	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	"html/template"
 	"time"
-
-	"github.com/SakuraBurst/gitlab-bot/models"
 )
 
 const CanBeMerged = "can_be_merged"
