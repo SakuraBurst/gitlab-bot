@@ -1,19 +1,19 @@
 package gitlab
 
 import (
+	"github.com/SakuraBurst/gitlab-bot/api/clients"
 	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 func (g Gitlab) MergeRequests() (models.MergeRequestsInfo, error) {
 	log.WithFields(log.Fields{"repo": g.repo}).Info("парсер начал работу")
-	request, err := getMergeRequest(g)
+	url, headers, err := getMergeRequestURL(g)
 	if err != nil {
 		log.Error(err)
 		return models.MergeRequestsInfo{}, err
 	}
-	resp, err := http.DefaultClient.Do(request)
+	resp, err := clients.Get(url.String(), headers)
 	if err != nil {
 		log.Error(err)
 		return models.MergeRequestsInfo{}, err
@@ -59,11 +59,11 @@ func getMrsWithDiffs(g Gitlab, mri models.MergeRequestsInfo) models.MergeRequest
 
 func (g Gitlab) getMRDiffs(iid int, resChan chan models.MergeRequestListItem) {
 	log.WithFields(log.Fields{"iid": iid}).Info("получение отдельного открытого мр с доп даннымми")
-	request, err := getSingleMergeRequestWithChanges(g, iid)
+	url, headers, err := getSingleMergeRequestWithChangesURL(g, iid)
 	if err != nil {
 		log.Fatal(err)
 	}
-	resp, err := http.DefaultClient.Do(request)
+	resp, err := clients.Get(url.String(), headers)
 
 	if err != nil {
 		log.Fatal(err)

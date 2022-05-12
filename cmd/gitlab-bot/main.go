@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"crypto/tls"
-	"encoding/json"
 	"github.com/SakuraBurst/gitlab-bot/internal/helpers"
 	"github.com/SakuraBurst/gitlab-bot/internal/logger"
 	"github.com/SakuraBurst/gitlab-bot/internal/worker"
@@ -36,7 +34,6 @@ func init() {
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
 			KeepAlive: 30 * time.Second,
-			DualStack: true,
 		}).DialContext,
 		ForceAttemptHTTP2:     true,
 		MaxIdleConns:          100,
@@ -49,7 +46,16 @@ func init() {
 			InsecureSkipVerify: true,
 		},
 	}
-	logger.Init()
+	f, err := os.OpenFile("logger.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Error(err)
+	}
+	logger.Init(log.InfoLevel, f)
+
+	logger.AddHook(&logger.FatalReminderChannel{
+		Chat: envMap["FATAL_REMINDER"], Token: envMap["TELEGRAM_BOT_TOKEN"],
+	})
+
 	log.WithFields(log.Fields{
 		"with diffs":         envMap["VIEW_CHANGES"],
 		"project":            envMap["PROJECT"],
@@ -57,34 +63,6 @@ func init() {
 		"telegram chanel":    envMap["TELEGRAM_CHANEL"],
 		"telegram bot token": envMap["TELEGRAM_BOT_TOKEN"],
 	}).Info("Проект инициализирован")
-}
-
-type FatalReminderChannel struct {
-	Chat  string
-	Token string
-}
-
-func (f *FatalReminderChannel) Levels() []log.Level {
-	return []log.Level{log.FatalLevel}
-}
-
-func (f *FatalReminderChannel) Fire(entry *log.Entry) error {
-	tgRequest := map[string]string{
-		"chat_id":    f.Chat,
-		"text":       entry.Message,
-		"parse_mode": "html",
-	}
-	testBytes, err := json.Marshal(tgRequest)
-	if err != nil {
-		panic(err)
-	}
-	reader := bytes.NewReader(testBytes)
-	response, err := http.Post("https://api.telegram.org/bot"+f.Token+"/sendMessage", "application/json", reader)
-	if err != nil {
-		panic(err)
-	}
-	response.Body.Close()
-	return nil
 }
 
 func main() {
@@ -96,10 +74,6 @@ func main() {
 
 	git := gitlab.NewGitlabConn(envMap["VIEW_CHANGES"] == True, envMap["PROJECT"], envMap["GITLAB_TOKEN"], "https://gitlab.innostage-group.ru")
 	tlBot := telegram.NewBot(envMap["TELEGRAM_BOT_TOKEN"], envMap["TELEGRAM_CHANEL"])
-
-	logger.AddHook(&FatalReminderChannel{
-		envMap["FATAL_REMINDER"], envMap["TELEGRAM_BOT_TOKEN"],
-	})
 
 	//mergeRequests, err := git.MergeRequests()
 	//if err != nil {

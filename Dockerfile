@@ -4,7 +4,7 @@ WORKDIR /myapp
 
 COPY . .
 
-RUN cd cmd/gitlab-bot && go get && go install && go build
+RUN go get -d -t ./... && go install ./... && cd cmd/gitlab-bot &&  go build
 
 ENV TZ=Europe/Moscow
 
