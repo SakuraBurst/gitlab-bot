@@ -5,8 +5,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func OnlyNewMrs(openedMergeRequests models.MergeRequests, bd models.BasaDannihMySQLPostgresMongoPgAdmin777) (models.MergeRequests, bool) {
-	onlyNewMrs := models.MergeRequests{On: openedMergeRequests.On}
+func OnlyNewMrs(openedMergeRequests models.MergeRequestsInfo, bd models.BasaDannihMySQLPostgresMongoPgAdmin777) (models.MergeRequestsInfo, bool) {
+	onlyNewMrs := models.MergeRequestsInfo{On: openedMergeRequests.On}
 	if openedMergeRequests.Length == 0 {
 		return onlyNewMrs, false
 	}
@@ -22,7 +22,7 @@ func OnlyNewMrs(openedMergeRequests models.MergeRequests, bd models.BasaDannihMy
 	return onlyNewMrs, onlyNewMrs.Length > 0
 }
 
-func WriteMrsToBd(bd models.BasaDannihMySQLPostgresMongoPgAdmin777, mrs ...models.MergeRequestFileChanges) {
+func WriteMrsToBd(bd models.BasaDannihMySQLPostgresMongoPgAdmin777, mrs ...models.MergeRequestListItem) {
 	for _, v := range mrs {
 		bd.WriteToBD(v.Iid)
 	}

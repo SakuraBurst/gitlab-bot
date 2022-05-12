@@ -49,8 +49,6 @@ func WaitFor24Hours(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot) {
 func WaitForMinute(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot, bd models.BasaDannihMySQLPostgresMongoPgAdmin777) {
 	errorCounter := 0
 	for {
-		log.Info("sleep for 1 minute")
-		time.Sleep(time.Minute)
 		mergeRequests, err := glConn.MergeRequests()
 		if err != nil {
 			log.Error("gg")
@@ -64,6 +62,8 @@ func WaitForMinute(stop chan bool, glConn gitlab.Gitlab, tlBot telegram.Bot, bd 
 		if ok {
 			tlBot.SendMergeRequestMessage(mergeRequests, true, glConn.WithDiffs)
 		}
+		log.Info("sleep for 1 minute")
+		time.Sleep(time.Minute)
 	}
 
 }

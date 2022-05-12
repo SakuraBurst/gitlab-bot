@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (t Bot) SendMergeRequestMessage(mergeRequests models.MergeRequests, newMr, withDiffs bool) {
+func (t Bot) SendMergeRequestMessage(mergeRequests models.MergeRequestsInfo, newMr, withDiffs bool) {
 	buff := bytes.NewBuffer(nil)
 	if err := templates.GetRightTemplate(newMr, withDiffs).Execute(buff, mergeRequests); err != nil {
 		log.Fatal(err)

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"github.com/SakuraBurst/gitlab-bot/internal/helpers"
 	"github.com/SakuraBurst/gitlab-bot/internal/logger"
 	"github.com/SakuraBurst/gitlab-bot/internal/worker"
@@ -31,7 +30,6 @@ func init() {
 	if err != nil || len(envMap) == 0 {
 		envMap = helpers.GetOsEnvMap()
 	}
-	fmt.Println(envMap)
 
 	http.DefaultClient.Transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -96,18 +94,18 @@ func main() {
 		log.Fatal("ну и чего ты ожидал? Без объявлялки и напоминалки это бот ничего не умеет делать")
 	}
 
-	git := gitlab.NewGitlabConn(envMap["VIEW_CHANGES"] == True, envMap["PROJECT"], envMap["GITLAB_TOKEN"])
+	git := gitlab.NewGitlabConn(envMap["VIEW_CHANGES"] == True, envMap["PROJECT"], envMap["GITLAB_TOKEN"], "https://gitlab.innostage-group.ru")
 	tlBot := telegram.NewBot(envMap["TELEGRAM_BOT_TOKEN"], envMap["TELEGRAM_CHANEL"])
 
 	logger.AddHook(&FatalReminderChannel{
 		envMap["FATAL_REMINDER"], envMap["TELEGRAM_BOT_TOKEN"],
 	})
 
-	mergeRequests, err := git.MergeRequests()
-	if err != nil {
-		log.Fatal(err)
-	}
-	helpers.WriteMrsToBd(bd, mergeRequests.MergeRequests...)
+	//mergeRequests, err := git.MergeRequests()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//helpers.WriteMrsToBd(bd, mergeRequests.MergeRequests...)
 
 	stop := make(chan bool)
 	if envMap["WITHOUT_NOTIFIER"] != True {

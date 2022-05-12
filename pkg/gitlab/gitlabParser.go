@@ -1,79 +1,68 @@
 package gitlab
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/SakuraBurst/gitlab-bot/pkg/models"
-	"net/http"
-	"net/url"
-	"time"
-
 	log "github.com/sirupsen/logrus"
+	"net/http"
 )
 
-const OPENED = "opened"
-
-func (g Gitlab) MergeRequests() (models.MergeRequests, error) {
+func (g Gitlab) MergeRequests() (models.MergeRequestsInfo, error) {
 	log.WithFields(log.Fields{"repo": g.repo}).Info("парсер начал работу")
-	request, err := http.NewRequest("GET", fmt.Sprintf("https://gitlab.innostage-group.ru/api/v4/projects/%s/merge_requests", url.QueryEscape(g.repo)), nil)
+	request, err := getMergeRequest(g)
 	if err != nil {
 		log.Error(err)
-		return models.MergeRequests{}, err
+		return models.MergeRequestsInfo{}, err
 	}
-	request.Header.Add("PRIVATE-TOKEN", g.token)
-	log.Info(request.URL.String())
 	resp, err := http.DefaultClient.Do(request)
 	if err != nil {
 		log.Error(err)
-		return models.MergeRequests{}, err
+		return models.MergeRequestsInfo{}, err
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
 			log.Fatal(err)
 		}
 	}()
-	decoder := json.NewDecoder(resp.Body)
-	mergeRequests := make([]models.MergeRequestListItem, 0)
-	err = decoder.Decode(&mergeRequests)
+
+	openedMergeRequests, err := decodeMergeRequestsInfo(resp.Body)
 	if err != nil {
 		log.Error(err)
-		return models.MergeRequests{}, err
+		return models.MergeRequestsInfo{}, err
 	}
 
-	log.WithFields(log.Fields{"Количество мрок": len(mergeRequests)}).Info("парсер получил список мрок")
-	openedMergeRequests := models.MergeRequests{Length: 0, On: time.Now(), MergeRequests: make([]models.MergeRequestFileChanges, 0, len(mergeRequests))}
-	for _, v := range mergeRequests {
-		if v.State == OPENED {
-			openedMergeRequests.Length++
-			openedMergeRequests.MergeRequests = append(openedMergeRequests.MergeRequests, models.MergeRequestFileChanges{MergeRequestListItem: v, Changes: []models.FileChanges{}})
-		}
-
-	}
 	if g.WithDiffs {
-		responseWaiters := make(chan models.MergeRequestFileChanges, openedMergeRequests.Length)
-		for _, v := range openedMergeRequests.MergeRequests {
-			go g.getMRDiffs(v.Iid, responseWaiters)
-		}
-
-		openedMergeRequests = models.MergeRequests{Length: openedMergeRequests.Length, On: openedMergeRequests.On, MergeRequests: make([]models.MergeRequestFileChanges, 0, openedMergeRequests.Length)}
-
-		for i := 0; i < openedMergeRequests.Length; i++ {
-			openedMergeRequests.MergeRequests = append(openedMergeRequests.MergeRequests, <-responseWaiters)
-		}
-
-		close(responseWaiters)
+		return getMrsWithDiffs(g, openedMergeRequests), nil
 	}
 	log.WithFields(log.Fields{"Количество мрок со статусом opened": openedMergeRequests.Length}).Info("парсер закончил работу")
 	return openedMergeRequests, nil
 }
 
-func (g Gitlab) getMRDiffs(iid int, resChan chan models.MergeRequestFileChanges) {
+func getMrsWithDiffs(g Gitlab, mri models.MergeRequestsInfo) models.MergeRequestsInfo {
+	responseWaiters := make(chan models.MergeRequestListItem, mri.Length)
+	for _, v := range mri.MergeRequests {
+		go g.getMRDiffs(v.Iid, responseWaiters)
+	}
+
+	openedMergeRequestsWithDiffs := models.MergeRequestsInfo{
+		Length:        mri.Length,
+		On:            mri.On,
+		MergeRequests: make([]models.MergeRequestListItem, 0, mri.Length),
+	}
+
+	for i := 0; i < mri.Length; i++ {
+		openedMergeRequestsWithDiffs.MergeRequests = append(openedMergeRequestsWithDiffs.MergeRequests, <-responseWaiters)
+	}
+
+	close(responseWaiters)
+	return openedMergeRequestsWithDiffs
+}
+
+func (g Gitlab) getMRDiffs(iid int, resChan chan models.MergeRequestListItem) {
 	log.WithFields(log.Fields{"iid": iid}).Info("получение отдельного открытого мр с доп даннымми")
-	request, err := http.NewRequest("GET", fmt.Sprintf("http://gitlab.innostage-group.ru/api/v4/projects/%s/merge_requests/%d/changes", url.QueryEscape(g.repo), iid), nil)
+	request, err := getSingleMergeRequestWithChanges(g, iid)
 	if err != nil {
 		log.Fatal(err)
 	}
-	request.Header.Add("PRIVATE-TOKEN", g.token)
 	resp, err := http.DefaultClient.Do(request)
 
 	if err != nil {
@@ -84,19 +73,7 @@ func (g Gitlab) getMRDiffs(iid int, resChan chan models.MergeRequestFileChanges)
 			log.Fatal(err)
 		}
 	}()
-	decoder := json.NewDecoder(resp.Body)
-
-	if resp.StatusCode != http.StatusOK {
-		test := make(map[string]interface{})
-		err = decoder.Decode(&test)
-		if err != nil {
-			log.Panic(err)
-		}
-		log.WithFields(log.Fields{"url": request.URL}).Fatal(test)
-	}
-
-	mrWithFileChanges := models.MergeRequestFileChanges{}
-	err = decoder.Decode(&mrWithFileChanges)
+	mrWithFileChanges, err := decodeSingleMergeRequestItem(resp.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
