@@ -1,10 +1,11 @@
 package logger
 
 import (
-	"github.com/SakuraBurst/gitlab-bot/api/clients"
+	"github.com/SakuraBurst/gitlab-bot/pkg/telegram"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"os"
 )
 
 type FixedJSONFormatter struct {
@@ -33,27 +34,21 @@ func AddHook(hook log.Hook) {
 	log.AddHook(hook)
 }
 
-type FatalReminderChannel struct {
-	Chat  string
-	Token string
+type FatalNotifier struct {
+	Bot     telegram.Bot
+	LogFile *os.File
 }
 
-func (f *FatalReminderChannel) Levels() []log.Level {
+func (f *FatalNotifier) Levels() []log.Level {
 	return []log.Level{log.FatalLevel}
 }
 
-func (f *FatalReminderChannel) Fire(entry *log.Entry) error {
-	tgRequest := map[string]string{
-		"chat_id":    f.Chat,
-		"text":       entry.Message,
-		"parse_mode": "html",
-	}
+func (f *FatalNotifier) Fire(entry *log.Entry) error {
 	headers := make(http.Header)
 	headers.Set("Content-Type", "application/json")
-	response, err := clients.Post("https://api.telegram.org/bot"+f.Token+"/sendMessage", tgRequest, headers)
+	err := f.Bot.SendMessage(entry.Message)
 	if err != nil {
 		panic(err)
 	}
-	response.Body.Close()
 	return nil
 }

@@ -27,16 +27,16 @@ func getMergeRequestURL(g Gitlab) (*url.URL, http.Header, error) {
 	return mergeRequestsURL, headers, err
 }
 
-func decodeMergeRequestsInfo(body io.Reader) (models.MergeRequestsInfo, error) {
+func decodeMergeRequestsInfo(body io.Reader) (MergeRequestsInfo, error) {
 	decoder := json.NewDecoder(body)
 	mergeRequests := make([]models.MergeRequestListItem, 0)
 	err := decoder.Decode(&mergeRequests)
 	if err != nil {
 		log.Error(err)
-		return models.MergeRequestsInfo{}, err
+		return MergeRequestsInfo{}, err
 	}
 	log.WithFields(log.Fields{"Количество мрок": len(mergeRequests)}).Info("парсер получил список мрок")
-	return models.MergeRequestsInfo{
+	return MergeRequestsInfo{
 		Length:        len(mergeRequests),
 		On:            time.Now(),
 		MergeRequests: mergeRequests,

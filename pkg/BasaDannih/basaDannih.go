@@ -1,4 +1,4 @@
-package models
+package BasaDannih
 
 type BasaDannihMySQLPostgresMongoPgAdmin777 map[int]bool
 

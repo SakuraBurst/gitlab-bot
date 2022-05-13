@@ -4,19 +4,26 @@ import (
 	"github.com/SakuraBurst/gitlab-bot/api/clients"
 	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	log "github.com/sirupsen/logrus"
+	"time"
 )
 
-func (g Gitlab) MergeRequests() (models.MergeRequestsInfo, error) {
+type MergeRequestsInfo struct {
+	Length        int
+	On            time.Time
+	MergeRequests []models.MergeRequestListItem
+}
+
+func (g Gitlab) MergeRequests() (MergeRequestsInfo, error) {
 	log.WithFields(log.Fields{"repo": g.repo}).Info("парсер начал работу")
 	url, headers, err := getMergeRequestURL(g)
 	if err != nil {
 		log.Error(err)
-		return models.MergeRequestsInfo{}, err
+		return MergeRequestsInfo{}, err
 	}
 	resp, err := clients.Get(url.String(), headers)
 	if err != nil {
 		log.Error(err)
-		return models.MergeRequestsInfo{}, err
+		return MergeRequestsInfo{}, err
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
@@ -27,7 +34,7 @@ func (g Gitlab) MergeRequests() (models.MergeRequestsInfo, error) {
 	openedMergeRequests, err := decodeMergeRequestsInfo(resp.Body)
 	if err != nil {
 		log.Error(err)
-		return models.MergeRequestsInfo{}, err
+		return MergeRequestsInfo{}, err
 	}
 
 	if g.WithDiffs {
@@ -37,13 +44,13 @@ func (g Gitlab) MergeRequests() (models.MergeRequestsInfo, error) {
 	return openedMergeRequests, nil
 }
 
-func getMrsWithDiffs(g Gitlab, mri models.MergeRequestsInfo) models.MergeRequestsInfo {
+func getMrsWithDiffs(g Gitlab, mri MergeRequestsInfo) MergeRequestsInfo {
 	responseWaiters := make(chan models.MergeRequestListItem, mri.Length)
 	for _, v := range mri.MergeRequests {
 		go g.getMRDiffs(v.Iid, responseWaiters)
 	}
 
-	openedMergeRequestsWithDiffs := models.MergeRequestsInfo{
+	openedMergeRequestsWithDiffs := MergeRequestsInfo{
 		Length:        mri.Length,
 		On:            mri.On,
 		MergeRequests: make([]models.MergeRequestListItem, 0, mri.Length),

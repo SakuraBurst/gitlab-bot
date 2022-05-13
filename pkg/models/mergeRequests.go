@@ -2,12 +2,6 @@ package models
 
 import "time"
 
-type MergeRequestsInfo struct {
-	Length        int
-	On            time.Time
-	MergeRequests []MergeRequestListItem
-}
-
 type MergeRequestListItem struct {
 	ID           int           `json:"id"`
 	Iid          int           `json:"iid"`

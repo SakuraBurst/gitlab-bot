@@ -1,29 +1,25 @@
 package telegram
 
 import (
-	"bytes"
 	"encoding/json"
+	"github.com/SakuraBurst/gitlab-bot/api/clients"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func (t Bot) SendMessage(text string) {
+func (t Bot) SendMessage(text string) error {
 	tgRequest := map[string]string{
 		"chat_id":    t.mainChannel,
 		"text":       text,
 		"parse_mode": "html",
 	}
-
 	log.WithFields(log.Fields{"tgRequest": tgRequest}).Info("начата отправка сообщения в телеграм")
-	testBytes, err := json.Marshal(tgRequest)
+	headers := make(http.Header)
+	headers.Set("Content-Type", "application/json")
+	response, err := clients.Post("https://api.telegram.org/bot"+t.token+"/sendMessage", tgRequest, headers)
 	if err != nil {
-		log.Fatal(err)
-	}
-	reader := bytes.NewReader(testBytes)
-	response, err := http.Post("https://api.telegram.org/bot"+t.token+"/sendMessage", "application/json", reader)
-	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer func() {
 		if err := response.Body.Close(); err != nil {
@@ -41,4 +37,5 @@ func (t Bot) SendMessage(text string) {
 		log.WithFields(log.Fields{"ошибка отправки в телеграм": test}).Fatal()
 	}
 	log.Info("Сообщение успешно отправлено")
+	return nil
 }

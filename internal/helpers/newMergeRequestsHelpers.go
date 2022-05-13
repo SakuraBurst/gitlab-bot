@@ -1,12 +1,14 @@
 package helpers
 
 import (
+	"github.com/SakuraBurst/gitlab-bot/pkg/BasaDannih"
+	"github.com/SakuraBurst/gitlab-bot/pkg/gitlab"
 	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	log "github.com/sirupsen/logrus"
 )
 
-func OnlyNewMrs(openedMergeRequests models.MergeRequestsInfo, bd models.BasaDannihMySQLPostgresMongoPgAdmin777) (models.MergeRequestsInfo, bool) {
-	onlyNewMrs := models.MergeRequestsInfo{On: openedMergeRequests.On}
+func OnlyNewMrs(openedMergeRequests gitlab.MergeRequestsInfo, bd BasaDannih.BasaDannihMySQLPostgresMongoPgAdmin777) (gitlab.MergeRequestsInfo, bool) {
+	onlyNewMrs := gitlab.MergeRequestsInfo{On: openedMergeRequests.On}
 	if openedMergeRequests.Length == 0 {
 		return onlyNewMrs, false
 	}
@@ -22,7 +24,7 @@ func OnlyNewMrs(openedMergeRequests models.MergeRequestsInfo, bd models.BasaDann
 	return onlyNewMrs, onlyNewMrs.Length > 0
 }
 
-func WriteMrsToBd(bd models.BasaDannihMySQLPostgresMongoPgAdmin777, mrs ...models.MergeRequestListItem) {
+func WriteMrsToBd(bd BasaDannih.BasaDannihMySQLPostgresMongoPgAdmin777, mrs ...models.MergeRequestListItem) {
 	for _, v := range mrs {
 		bd.WriteToBD(v.Iid)
 	}

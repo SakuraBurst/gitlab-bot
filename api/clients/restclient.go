@@ -2,18 +2,51 @@ package clients
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
+	"time"
 )
+
+func init() {
+	http.DefaultClient.Transport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		TLSClientConfig: &tls.Config{
+			// UNSAFE!
+			// DON'T USE IN PRODUCTION!
+			InsecureSkipVerify: true,
+		},
+	}
+}
 
 var mockEnabled = false
 
-var Mocks map[string]response
+type MocksTable map[string]Mock
 
-type response struct {
+var Mocks = MocksTable{}
+
+type Mock struct {
 	Response *http.Response
 	Err      error
+}
+
+func (m MocksTable) AddMock(URL string, mock Mock) {
+	m[URL] = mock
+}
+
+func (m *MocksTable) ClearMocks() {
+	*m = MocksTable{}
 }
 
 func EnableMock() {

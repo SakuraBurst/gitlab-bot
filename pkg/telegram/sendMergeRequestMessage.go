@@ -3,14 +3,14 @@ package telegram
 import (
 	"bytes"
 	"github.com/SakuraBurst/gitlab-bot/internal/templates"
-	"github.com/SakuraBurst/gitlab-bot/pkg/models"
+	"github.com/SakuraBurst/gitlab-bot/pkg/gitlab"
 	log "github.com/sirupsen/logrus"
 )
 
-func (t Bot) SendMergeRequestMessage(mergeRequests models.MergeRequestsInfo, newMr, withDiffs bool) {
+func (t Bot) SendMergeRequestMessage(mergeRequests gitlab.MergeRequestsInfo, newMr, withDiffs bool) error {
 	buff := bytes.NewBuffer(nil)
 	if err := templates.GetRightTemplate(newMr, withDiffs).Execute(buff, mergeRequests); err != nil {
 		log.Fatal(err)
 	}
-	t.SendMessage(buff.String())
+	return t.SendMessage(buff.String())
 }
