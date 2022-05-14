@@ -3,6 +3,7 @@ package telegram
 import (
 	"encoding/json"
 	"github.com/SakuraBurst/gitlab-bot/api/clients"
+	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
@@ -29,12 +30,12 @@ func (t Bot) SendMessage(text string) error {
 	decoder := json.NewDecoder(response.Body)
 
 	if response.StatusCode != http.StatusOK {
-		test := make(map[string]interface{})
-		err = decoder.Decode(&test)
+		var tgError models.TelegramError
+		err = decoder.Decode(&tgError)
 		if err != nil {
 			log.Panic(err)
 		}
-		log.WithFields(log.Fields{"ошибка отправки в телеграм": test}).Fatal()
+		return tgError
 	}
 	log.Info("Сообщение успешно отправлено")
 	return nil

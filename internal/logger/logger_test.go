@@ -5,11 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SakuraBurst/gitlab-bot/api/clients"
+	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	"github.com/SakuraBurst/gitlab-bot/pkg/telegram"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
+	"net/http"
 	"os"
+	"os/exec"
 	"testing"
 	"time"
 )
@@ -54,9 +58,7 @@ func TestInit(t *testing.T) {
 }
 
 // 150966050
-func TestFatalReminderHookError(t *testing.T) {
-	buffer := bytes.NewBuffer(nil)
-	Init(log.TraceLevel, buffer)
+func TestFatalNotifierHookErrorRequest(t *testing.T) {
 	clients.EnableMock()
 	fr := &FatalNotifier{
 		Bot:     telegram.Bot{},
@@ -71,13 +73,72 @@ func TestFatalReminderHookError(t *testing.T) {
 
 	assert.PanicsWithValue(t, err, func() {
 		log.Fatal("govno")
-	}, "Должна произойти паника")
+	}, "Должна произойти паника c конкретным значением")
 
 	clients.Mocks.ClearMocks()
+}
 
-	clients.Mocks["https://api.telegram.org/bot/sendMessage"] = clients.Mock{
-		Response: nil,
-		Err:      nil,
+func TestFatalNotifierHookTelegramError(t *testing.T) {
+	telegramUnauthorizedMock := models.TelegramError{
+		Ok:          false,
+		ErrorCode:   401,
+		Description: "Unauthorized",
 	}
+	tgMockBytes, err := json.Marshal(telegramUnauthorizedMock)
+	require.Nil(t, err)
+	reader := bytes.NewReader(tgMockBytes)
+	readCloser := io.NopCloser(reader)
+	clients.EnableMock()
+	clients.Mocks.AddMock("https://api.telegram.org/bot/sendMessage", clients.Mock{
+		Response: &http.Response{
+			Status:     "401 Unauthorized",
+			StatusCode: 401,
+			Body:       readCloser,
+		},
+		Err: nil,
+	})
+	fr := &FatalNotifier{
+		Bot:     telegram.Bot{},
+		LogFile: nil,
+	}
+	AddHook(fr)
+	assert.PanicsWithValue(t, telegramUnauthorizedMock, func() {
+		log.Fatal("govno")
+	}, "Должна произойти паника c конкретным значением")
 
+	clients.Mocks.ClearMocks()
+}
+
+func TestFatalNotifierHook(t *testing.T) {
+	if os.Getenv("FATAL") == "1" {
+		telegramResponseMock := models.TelegramResponse{
+			Ok:     true,
+			Result: models.TelegramResult{},
+		}
+		tgMockBytes, err := json.Marshal(telegramResponseMock)
+		require.Nil(t, err)
+		reader := bytes.NewReader(tgMockBytes)
+		readCloser := io.NopCloser(reader)
+		clients.EnableMock()
+		clients.Mocks.AddMock("https://api.telegram.org/bot/sendMessage", clients.Mock{
+			Response: &http.Response{
+				Status:     "200 OK",
+				StatusCode: 200,
+				Body:       readCloser,
+			},
+			Err: nil,
+		})
+		fr := &FatalNotifier{
+			Bot:     telegram.Bot{},
+			LogFile: nil,
+		}
+		AddHook(fr)
+		log.Fatal("govno")
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestFatalNotifierHook")
+	cmd.Env = append(os.Environ(), "FATAL=1")
+	err := cmd.Run()
+	e, ok := err.(*exec.ExitError)
+	require.True(t, ok, "Эррор должен быть типа exec.ExitError")
+	assert.Equal(t, e.ExitCode(), 1, "Процесс должен завершиться с кодом 1")
 }

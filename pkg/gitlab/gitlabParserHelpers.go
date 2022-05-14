@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	log "github.com/sirupsen/logrus"
-	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -27,9 +26,17 @@ func getMergeRequestURL(g Gitlab) (*url.URL, http.Header, error) {
 	return mergeRequestsURL, headers, err
 }
 
-func decodeMergeRequestsInfo(body io.Reader) (MergeRequestsInfo, error) {
-	decoder := json.NewDecoder(body)
-	mergeRequests := make([]models.MergeRequestListItem, 0)
+func decodeMergeRequestsInfo(request *http.Response) (MergeRequestsInfo, error) {
+	decoder := json.NewDecoder(request.Body)
+	if request.StatusCode != http.StatusOK {
+		var gitlabError models.GitlabError
+		err := decoder.Decode(&gitlabError)
+		if err != nil {
+			return MergeRequestsInfo{}, err
+		}
+		return MergeRequestsInfo{}, gitlabError
+	}
+	mergeRequests := make([]models.MergeRequest, 0)
 	err := decoder.Decode(&mergeRequests)
 	if err != nil {
 		log.Error(err)
@@ -43,20 +50,19 @@ func decodeMergeRequestsInfo(body io.Reader) (MergeRequestsInfo, error) {
 	}, err
 }
 
-func decodeSingleMergeRequestItem(body io.Reader) (models.MergeRequestListItem, error) {
-	decoder := json.NewDecoder(body)
+func decodeSingleMergeRequestItem(request *http.Response) (models.MergeRequest, error) {
+	decoder := json.NewDecoder(request.Body)
 
-	// TODO: замапать гитлаб эррор
-	//if resp.StatusCode != http.StatusOK {
-	//	test := make(map[string]interface{})
-	//	err = decoder.Decode(&test)
-	//	if err != nil {
-	//		log.Panic(err)
-	//	}
-	//	log.WithFields(log.Fields{"url": request.URL}).Fatal(test)
-	//}
+	if request.StatusCode != http.StatusOK {
+		var gitlabError models.GitlabError
+		err := decoder.Decode(&gitlabError)
+		if err != nil {
+			return models.MergeRequest{}, err
+		}
+		return models.MergeRequest{}, gitlabError
+	}
 
-	mrListItem := models.MergeRequestListItem{}
+	mrListItem := models.MergeRequest{}
 	err := decoder.Decode(&mrListItem)
 	if err != nil {
 		log.Fatal(err)

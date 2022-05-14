@@ -30,7 +30,7 @@ func init() {
 	}
 }
 
-var mockEnabled = false
+var MockEnabled = false
 
 type MocksTable map[string]Mock
 
@@ -50,15 +50,15 @@ func (m *MocksTable) ClearMocks() {
 }
 
 func EnableMock() {
-	mockEnabled = true
+	MockEnabled = true
 }
 
 func DisableMock() {
-	mockEnabled = false
+	MockEnabled = false
 }
 
 func Post(url string, body interface{}, headers http.Header) (*http.Response, error) {
-	if mockEnabled {
+	if MockEnabled {
 		r, ok := Mocks[url]
 		if !ok {
 			return nil, errors.New("Нет такого реквеста в моках")
@@ -80,7 +80,7 @@ func Post(url string, body interface{}, headers http.Header) (*http.Response, er
 }
 
 func Get(url string, headers http.Header) (*http.Response, error) {
-	if mockEnabled {
+	if MockEnabled {
 		r, ok := Mocks[url]
 		if !ok {
 			return nil, errors.New("Нет такого реквеста в моках")

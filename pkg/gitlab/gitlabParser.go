@@ -10,7 +10,7 @@ import (
 type MergeRequestsInfo struct {
 	Length        int
 	On            time.Time
-	MergeRequests []models.MergeRequestListItem
+	MergeRequests []models.MergeRequest
 }
 
 func (g Gitlab) MergeRequests() (MergeRequestsInfo, error) {
@@ -31,7 +31,7 @@ func (g Gitlab) MergeRequests() (MergeRequestsInfo, error) {
 		}
 	}()
 
-	openedMergeRequests, err := decodeMergeRequestsInfo(resp.Body)
+	openedMergeRequests, err := decodeMergeRequestsInfo(resp)
 	if err != nil {
 		log.Error(err)
 		return MergeRequestsInfo{}, err
@@ -45,7 +45,7 @@ func (g Gitlab) MergeRequests() (MergeRequestsInfo, error) {
 }
 
 func getMrsWithDiffs(g Gitlab, mri MergeRequestsInfo) MergeRequestsInfo {
-	responseWaiters := make(chan models.MergeRequestListItem, mri.Length)
+	responseWaiters := make(chan models.MergeRequest, mri.Length)
 	for _, v := range mri.MergeRequests {
 		go g.getMRDiffs(v.Iid, responseWaiters)
 	}
@@ -53,7 +53,7 @@ func getMrsWithDiffs(g Gitlab, mri MergeRequestsInfo) MergeRequestsInfo {
 	openedMergeRequestsWithDiffs := MergeRequestsInfo{
 		Length:        mri.Length,
 		On:            mri.On,
-		MergeRequests: make([]models.MergeRequestListItem, 0, mri.Length),
+		MergeRequests: make([]models.MergeRequest, 0, mri.Length),
 	}
 
 	for i := 0; i < mri.Length; i++ {
@@ -64,7 +64,7 @@ func getMrsWithDiffs(g Gitlab, mri MergeRequestsInfo) MergeRequestsInfo {
 	return openedMergeRequestsWithDiffs
 }
 
-func (g Gitlab) getMRDiffs(iid int, resChan chan models.MergeRequestListItem) {
+func (g Gitlab) getMRDiffs(iid int, resChan chan models.MergeRequest) {
 	log.WithFields(log.Fields{"iid": iid}).Info("получение отдельного открытого мр с доп даннымми")
 	url, headers, err := getSingleMergeRequestWithChangesURL(g, iid)
 	if err != nil {
@@ -80,7 +80,7 @@ func (g Gitlab) getMRDiffs(iid int, resChan chan models.MergeRequestListItem) {
 			log.Fatal(err)
 		}
 	}()
-	mrWithFileChanges, err := decodeSingleMergeRequestItem(resp.Body)
+	mrWithFileChanges, err := decodeSingleMergeRequestItem(resp)
 	if err != nil {
 		log.Fatal(err)
 	}

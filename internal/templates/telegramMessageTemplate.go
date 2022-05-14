@@ -116,7 +116,7 @@ var TelegramMessageTemplateNewMrWithDiffs = template.Must(template.New("mr").Fun
 {{end}}
 `))
 
-func newMrTitle(mrs []models.MergeRequestListItem) string {
+func newMrTitle(mrs []models.MergeRequest) string {
 	if len(mrs) == 1 {
 		return "Новый MR"
 	}

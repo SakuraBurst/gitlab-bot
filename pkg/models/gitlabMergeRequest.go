@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type MergeRequestListItem struct {
+type MergeRequest struct {
 	ID           int           `json:"id"`
 	Iid          int           `json:"iid"`
 	ProjectID    int           `json:"project_id"`

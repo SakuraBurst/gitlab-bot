@@ -24,7 +24,7 @@ func OnlyNewMrs(openedMergeRequests gitlab.MergeRequestsInfo, bd BasaDannih.Basa
 	return onlyNewMrs, onlyNewMrs.Length > 0
 }
 
-func WriteMrsToBd(bd BasaDannih.BasaDannihMySQLPostgresMongoPgAdmin777, mrs ...models.MergeRequestListItem) {
+func WriteMrsToBd(bd BasaDannih.BasaDannihMySQLPostgresMongoPgAdmin777, mrs ...models.MergeRequest) {
 	for _, v := range mrs {
 		bd.WriteToBD(v.Iid)
 	}
