@@ -4,7 +4,7 @@ import (
 	"github.com/SakuraBurst/gitlab-bot/internal/helpers"
 	"github.com/SakuraBurst/gitlab-bot/internal/logger"
 	"github.com/SakuraBurst/gitlab-bot/internal/worker"
-	"github.com/SakuraBurst/gitlab-bot/pkg/BasaDannih"
+	"github.com/SakuraBurst/gitlab-bot/pkg/basa_dannih"
 	"github.com/SakuraBurst/gitlab-bot/pkg/gitlab"
 	"github.com/SakuraBurst/gitlab-bot/pkg/telegram"
 	"github.com/joho/godotenv"
@@ -16,7 +16,7 @@ import (
 const True = "true"
 
 var envMap map[string]string
-var bd = make(BasaDannih.BasaDannihMySQLPostgresMongoPgAdmin777)
+var bd = make(basa_dannih.BasaDannihMySQLPostgresMongoPgAdmin777)
 var neededEnv = []string{"VIEW_CHANGES", "PROJECT", "GITLAB_TOKEN", "TELEGRAM_CHANEL", "TELEGRAM_BOT_TOKEN", "FATAL_REMINDER"}
 
 func init() {
@@ -58,12 +58,12 @@ func main() {
 
 	git := gitlab.NewGitlabConn(envMap["VIEW_CHANGES"] == True, envMap["PROJECT"], envMap["GITLAB_TOKEN"], "https://gitlab.innostage-group.ru")
 	tlBot := telegram.NewBot(envMap["TELEGRAM_BOT_TOKEN"], envMap["TELEGRAM_CHANEL"])
-	// TODO: uncomment
-	//mergeRequests, err := git.MergeRequests()
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//helpers.WriteMrsToBd(bd, mergeRequests.MergeRequests...)
+
+	mergeRequests, err := git.MergeRequests()
+	if err != nil {
+		log.Fatal(err)
+	}
+	helpers.WriteMrsToBd(bd, mergeRequests.MergeRequests...)
 
 	stop := make(chan error)
 	if envMap["WITHOUT_NOTIFIER"] != True {
@@ -73,6 +73,6 @@ func main() {
 		go worker.WaitForMinute(stop, git, tlBot, bd)
 	}
 
-	err := <-stop
+	err = <-stop
 	log.Fatal(err)
 }

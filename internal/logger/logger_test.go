@@ -73,7 +73,7 @@ func TestFatalNotifierHookErrorRequest(t *testing.T) {
 
 	assert.PanicsWithValue(t, err, func() {
 		log.Fatal("govno")
-	}, "Должна произойти паника c конкретным значением")
+	})
 
 	clients.Mocks.ClearMocks()
 }
@@ -104,7 +104,7 @@ func TestFatalNotifierHookTelegramError(t *testing.T) {
 	AddHook(fr)
 	assert.PanicsWithValue(t, telegramUnauthorizedMock, func() {
 		log.Fatal("govno")
-	}, "Должна произойти паника c конкретным значением")
+	})
 
 	clients.Mocks.ClearMocks()
 }
@@ -139,6 +139,6 @@ func TestFatalNotifierHook(t *testing.T) {
 	cmd.Env = append(os.Environ(), "FATAL=1")
 	err := cmd.Run()
 	e, ok := err.(*exec.ExitError)
-	require.True(t, ok, "Эррор должен быть типа exec.ExitError")
+	require.True(t, ok)
 	assert.Equal(t, e.ExitCode(), 1, "Процесс должен завершиться с кодом 1")
 }

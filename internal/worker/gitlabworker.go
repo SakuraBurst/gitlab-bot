@@ -2,7 +2,7 @@ package worker
 
 import (
 	"github.com/SakuraBurst/gitlab-bot/internal/helpers"
-	"github.com/SakuraBurst/gitlab-bot/pkg/BasaDannih"
+	"github.com/SakuraBurst/gitlab-bot/pkg/basa_dannih"
 	"github.com/SakuraBurst/gitlab-bot/pkg/gitlab"
 	"github.com/SakuraBurst/gitlab-bot/pkg/telegram"
 	"time"
@@ -45,11 +45,13 @@ func WaitFor24Hours(stop chan<- error, glConn gitlab.Gitlab, tlBot telegram.Bot)
 	}
 }
 
-func WaitForMinute(stop chan error, glConn gitlab.Gitlab, tlBot telegram.Bot, bd BasaDannih.BasaDannihMySQLPostgresMongoPgAdmin777) {
+func WaitForMinute(stop chan error, glConn gitlab.Gitlab, tlBot telegram.Bot, bd basa_dannih.BasaDannihMySQLPostgresMongoPgAdmin777) {
 	for {
 		mergeRequests, err := glConn.MergeRequests()
 		errorChecker(err, stop)
-		mergeRequests, ok := helpers.OnlyNewMrs(mergeRequests, bd)
+		openedMrs, writtenMrs, ok := helpers.OnlyNewMrs(mergeRequests.MergeRequests, bd)
+		mergeRequests.MergeRequests = openedMrs
+		mergeRequests.Length = writtenMrs
 		log.WithFields(log.Fields{"Количество новых мрок": mergeRequests.Length, "Статус": ok}).Info("Ежеминутный обход")
 		if ok {
 			err := tlBot.SendMergeRequestMessage(mergeRequests, true, glConn.WithDiffs)

@@ -13,12 +13,13 @@ import (
 const OPENED = "opened"
 
 func getMergeRequestURL(g Gitlab) (*url.URL, http.Header, error) {
-	mergeRequestsURL, err := url.Parse(fmt.Sprintf("%s/api/v4/projects/%s/merge_requests", g.Url, url.QueryEscape(g.repo)))
+	mergeRequestsURL, err := url.Parse(fmt.Sprintf("%s/api/v4/projects/%s/merge_requests", g.url, url.QueryEscape(g.repo)))
 	if err != nil {
 		return nil, nil, err
 	}
 	query := url.Values{}
 	query.Set("state", OPENED)
+	query.Set("with_merge_status_recheck", "true")
 	mergeRequestsURL.RawQuery = query.Encode()
 	headers := make(http.Header)
 	headers.Add("PRIVATE-TOKEN", g.token)
@@ -71,7 +72,7 @@ func decodeSingleMergeRequestItem(request *http.Response) (models.MergeRequest, 
 }
 
 func getSingleMergeRequestWithChangesURL(g Gitlab, iid int) (*url.URL, http.Header, error) {
-	mergeRequestURL, err := url.Parse(fmt.Sprintf("%s/api/v4/projects/%s/merge_requests/%d/changes", g.Url, url.QueryEscape(g.repo), iid))
+	mergeRequestURL, err := url.Parse(fmt.Sprintf("%s/api/v4/projects/%s/merge_requests/%d/changes", g.url, url.QueryEscape(g.repo), iid))
 	if err != nil {
 		return nil, nil, err
 	}
