@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/SakuraBurst/gitlab-bot/internal/helpers"
 	"github.com/SakuraBurst/gitlab-bot/internal/logger"
-	"github.com/SakuraBurst/gitlab-bot/internal/worker"
+	"github.com/SakuraBurst/gitlab-bot/internal/workers"
 	"github.com/SakuraBurst/gitlab-bot/pkg/basa_dannih"
 	"github.com/SakuraBurst/gitlab-bot/pkg/gitlab"
 	"github.com/SakuraBurst/gitlab-bot/pkg/telegram"
@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const True = "true"
@@ -65,12 +66,43 @@ func main() {
 	}
 	helpers.WriteMrsToBd(bd, mergeRequests.MergeRequests...)
 
+	var FullDayWork = func() error {
+		t := time.Now()
+		// отдыхаем
+		if t.Weekday() == 0 || t.Weekday() == 6 {
+			return nil
+		}
+		mergeRequests, err := git.MergeRequests()
+		if err != nil {
+			return err
+		}
+		log.WithFields(log.Fields{"Количество новых мрок": mergeRequests.Length}).Info("Ежедневный обход")
+		err = tlBot.SendMergeRequestMessage(mergeRequests, false, git.WithDiffs)
+		return err
+	}
+
+	var OneMinuteWork = func() error {
+		mergeRequests, err := git.MergeRequests()
+		if err != nil {
+			return err
+		}
+		openedMrs, writtenMrs, ok := helpers.OnlyNewMrs(mergeRequests.MergeRequests, bd)
+		mergeRequests.MergeRequests = openedMrs
+		mergeRequests.Length = writtenMrs
+		log.WithFields(log.Fields{"Количество новых мрок": mergeRequests.Length, "Статус": ok}).Info("Ежеминутный обход")
+		if ok {
+			err := tlBot.SendMergeRequestMessage(mergeRequests, true, git.WithDiffs)
+			return err
+		}
+		return nil
+	}
+
 	stop := make(chan error)
 	if envMap["WITHOUT_NOTIFIER"] != True {
-		go worker.WaitFor24Hours(stop, git, tlBot)
+		go workers.FullDayWorker(stop, FullDayWork, 12)
 	}
 	if envMap["WITHOUT_REMINDER"] != True {
-		go worker.WaitForMinute(stop, git, tlBot, bd)
+		go workers.OneMinuteWorker(stop, OneMinuteWork)
 	}
 
 	err = <-stop
