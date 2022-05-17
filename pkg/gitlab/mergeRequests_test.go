@@ -39,7 +39,7 @@ var mergeRequestsURLMock = "https://test.com/api/v4/projects/test%2Ftest/merge_r
 
 var mergeRequestURLMock = "https://test.com/api/v4/projects/test%2Ftest/merge_requests/0/changes"
 
-func TestGetMRDiffs_RequestError(t *testing.T) {
+func TestGetMRDiffs_ClosedGoroutine(t *testing.T) {
 	panic("implement me")
 }
 
