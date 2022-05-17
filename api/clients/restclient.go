@@ -61,7 +61,7 @@ func Post(url string, body interface{}, headers http.Header) (*http.Response, er
 	if MockEnabled {
 		r, ok := Mocks[url]
 		if !ok {
-			return nil, errors.New("Нет такого реквеста в моках")
+			return nil, errors.New("нет такого реквеста в моках: " + url)
 		}
 		return r.Response, r.Err
 	}
@@ -83,7 +83,7 @@ func Get(url string, headers http.Header) (*http.Response, error) {
 	if MockEnabled {
 		r, ok := Mocks[url]
 		if !ok {
-			return nil, errors.New("Нет такого реквеста в моках")
+			return nil, errors.New("нет такого реквеста в моках: " + url)
 		}
 		return r.Response, r.Err
 	}

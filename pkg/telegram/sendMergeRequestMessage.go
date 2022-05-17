@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (t Bot) SendMergeRequestMessage(mergeRequests gitlab.MergeRequestsInfo, newMr, withDiffs bool) error {
+func (t Bot) SendMergeRequestMessage(mergeRequests *gitlab.MergeRequestsInfo, newMr, withDiffs bool) error {
 	buff := bytes.NewBuffer(nil)
 	if err := templates.GetRightTemplate(newMr, withDiffs).Execute(buff, mergeRequests); err != nil {
 		log.Fatal(err)

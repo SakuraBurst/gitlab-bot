@@ -2,6 +2,7 @@ package gitlab
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	log "github.com/sirupsen/logrus"
@@ -12,7 +13,7 @@ import (
 
 const OPENED = "opened"
 
-func getMergeRequestURL(g Gitlab) (*url.URL, http.Header, error) {
+func (g Gitlab) getMergeRequestURL() (*url.URL, http.Header, error) {
 	mergeRequestsURL, err := url.Parse(fmt.Sprintf("%s/api/v4/projects/%s/merge_requests", g.url, url.QueryEscape(g.repo)))
 	if err != nil {
 		return nil, nil, err
@@ -27,51 +28,54 @@ func getMergeRequestURL(g Gitlab) (*url.URL, http.Header, error) {
 	return mergeRequestsURL, headers, err
 }
 
-func decodeMergeRequestsInfo(request *http.Response) (MergeRequestsInfo, error) {
+func decodeMergeRequestsInfo(request *http.Response) (*MergeRequestsInfo, error) {
+	if request == nil {
+		return nil, errors.New("request is nil")
+	}
 	decoder := json.NewDecoder(request.Body)
 	if request.StatusCode != http.StatusOK {
 		var gitlabError models.GitlabError
 		err := decoder.Decode(&gitlabError)
 		if err != nil {
-			return MergeRequestsInfo{}, err
+			return nil, err
 		}
-		return MergeRequestsInfo{}, gitlabError
+		return nil, gitlabError
 	}
 	mergeRequests := make([]models.MergeRequest, 0)
 	err := decoder.Decode(&mergeRequests)
 	if err != nil {
 		log.Error(err)
-		return MergeRequestsInfo{}, err
+		return nil, err
 	}
 	log.WithFields(log.Fields{"Количество мрок": len(mergeRequests)}).Info("парсер получил список мрок")
-	return MergeRequestsInfo{
+	return &MergeRequestsInfo{
 		Length:        len(mergeRequests),
 		On:            time.Now(),
 		MergeRequests: mergeRequests,
 	}, err
 }
 
-func decodeSingleMergeRequestItem(request *http.Response) (models.MergeRequest, error) {
+func decodeSingleMergeRequestItem(request *http.Response) (*models.MergeRequest, error) {
 	decoder := json.NewDecoder(request.Body)
 
 	if request.StatusCode != http.StatusOK {
 		var gitlabError models.GitlabError
 		err := decoder.Decode(&gitlabError)
 		if err != nil {
-			return models.MergeRequest{}, err
+			return nil, err
 		}
-		return models.MergeRequest{}, gitlabError
+		return nil, gitlabError
 	}
 
-	mrListItem := models.MergeRequest{}
-	err := decoder.Decode(&mrListItem)
+	mrListItem := &models.MergeRequest{}
+	err := decoder.Decode(mrListItem)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	return mrListItem, err
 }
 
-func getSingleMergeRequestWithChangesURL(g Gitlab, iid int) (*url.URL, http.Header, error) {
+func (g Gitlab) getSingleMergeRequestWithChangesURL(iid int) (*url.URL, http.Header, error) {
 	mergeRequestURL, err := url.Parse(fmt.Sprintf("%s/api/v4/projects/%s/merge_requests/%d/changes", g.url, url.QueryEscape(g.repo), iid))
 	if err != nil {
 		return nil, nil, err

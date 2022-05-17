@@ -13,28 +13,29 @@ type MergeRequestsInfo struct {
 	MergeRequests []models.MergeRequest
 }
 
-func (g Gitlab) MergeRequests() (MergeRequestsInfo, error) {
+func (g Gitlab) MergeRequests() (*MergeRequestsInfo, error) {
 	log.WithFields(log.Fields{"repo": g.repo}).Info("парсер начал работу")
-	url, headers, err := getMergeRequestURL(g)
+	url, headers, err := g.getMergeRequestURL()
 	if err != nil {
 		log.Error(err)
-		return MergeRequestsInfo{}, err
+		return nil, err
 	}
 	resp, err := clients.Get(url.String(), headers)
 	if err != nil {
 		log.Error(err)
-		return MergeRequestsInfo{}, err
+		return nil, err
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Fatal(err)
+			// TODO: подумоть
+			log.Error(err)
 		}
 	}()
 
 	openedMergeRequests, err := decodeMergeRequestsInfo(resp)
 	if err != nil {
 		log.Error(err)
-		return MergeRequestsInfo{}, err
+		return nil, err
 	}
 
 	if g.WithDiffs {
@@ -44,7 +45,7 @@ func (g Gitlab) MergeRequests() (MergeRequestsInfo, error) {
 	return openedMergeRequests, nil
 }
 
-func getMrsWithDiffs(g Gitlab, mri MergeRequestsInfo) MergeRequestsInfo {
+func getMrsWithDiffs(g Gitlab, mri *MergeRequestsInfo) *MergeRequestsInfo {
 	responseWaiters := make(chan models.MergeRequest, mri.Length)
 	for _, v := range mri.MergeRequests {
 		go g.getMRDiffs(v.Iid, responseWaiters)
@@ -61,12 +62,12 @@ func getMrsWithDiffs(g Gitlab, mri MergeRequestsInfo) MergeRequestsInfo {
 	}
 
 	close(responseWaiters)
-	return openedMergeRequestsWithDiffs
+	return &openedMergeRequestsWithDiffs
 }
 
 func (g Gitlab) getMRDiffs(iid int, resChan chan models.MergeRequest) {
 	log.WithFields(log.Fields{"iid": iid}).Info("получение отдельного открытого мр с доп даннымми")
-	url, headers, err := getSingleMergeRequestWithChangesURL(g, iid)
+	url, headers, err := g.getSingleMergeRequestWithChangesURL(iid)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,5 +86,5 @@ func (g Gitlab) getMRDiffs(iid int, resChan chan models.MergeRequest) {
 		log.Fatal(err)
 	}
 	log.WithFields(log.Fields{"iid": iid, "mrWithFileChanges": mrWithFileChanges}).Info("мр успешно получен")
-	resChan <- mrWithFileChanges
+	resChan <- *mrWithFileChanges
 }
