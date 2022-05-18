@@ -44,7 +44,7 @@ func TestDecodeMergeRequestInfoErr_BodyError(t *testing.T) {
 	invalidBody, err := os.Open("123sdcfc90")
 	require.NotNil(t, err)
 	response := &http.Response{
-		Status:     "Invalid body test",
+		Status:     http.StatusText(http.StatusInternalServerError),
 		StatusCode: http.StatusInternalServerError,
 		Body:       invalidBody,
 	}
@@ -59,7 +59,7 @@ func TestDecodeMergeRequestInfoErr_GitlabError(t *testing.T) {
 	require.Nil(t, err)
 	errorBody := bytes.NewReader(gleBytes)
 	response := &http.Response{
-		Status:     "401 Unauthorized",
+		Status:     http.StatusText(http.StatusUnauthorized),
 		StatusCode: http.StatusUnauthorized,
 		Body:       io.NopCloser(errorBody),
 	}
@@ -73,7 +73,7 @@ func TestDecodeMergeRequestInfoOk_BodyError(t *testing.T) {
 	invalidBody, err := os.Open("123sdcfc90")
 	require.NotNil(t, err)
 	response := &http.Response{
-		Status:     "Invalid body test",
+		Status:     http.StatusText(http.StatusOK),
 		StatusCode: http.StatusOK,
 		Body:       invalidBody,
 	}
@@ -88,7 +88,7 @@ func TestDecodeMergeRequestInfo(t *testing.T) {
 	require.Nil(t, err)
 	errorBody := bytes.NewReader(glMergeRequestsBytes)
 	response := &http.Response{
-		Status:     "200 OK",
+		Status:     http.StatusText(http.StatusOK),
 		StatusCode: http.StatusOK,
 		Body:       io.NopCloser(errorBody),
 	}
@@ -121,7 +121,7 @@ func TestDecodeSingleMergeRequestItemErr_BodyError(t *testing.T) {
 	invalidBody, err := os.Open("123sdcfc90")
 	require.NotNil(t, err)
 	response := &http.Response{
-		Status:     "Invalid body test",
+		Status:     http.StatusText(http.StatusInternalServerError),
 		StatusCode: http.StatusInternalServerError,
 		Body:       invalidBody,
 	}
@@ -136,7 +136,7 @@ func TestDecodeSingleMergeRequestItemErr_GitlabError(t *testing.T) {
 	require.Nil(t, err)
 	errorBody := bytes.NewReader(gleBytes)
 	response := &http.Response{
-		Status:     "401 Unauthorized",
+		Status:     http.StatusText(http.StatusUnauthorized),
 		StatusCode: http.StatusUnauthorized,
 		Body:       io.NopCloser(errorBody),
 	}
@@ -150,7 +150,7 @@ func TestDecodeSingleMergeRequestItemOk_BodyError(t *testing.T) {
 	invalidBody, err := os.Open("123sdcfc90")
 	require.NotNil(t, err)
 	response := &http.Response{
-		Status:     "Invalid body test",
+		Status:     http.StatusText(http.StatusOK),
 		StatusCode: http.StatusOK,
 		Body:       invalidBody,
 	}
@@ -165,7 +165,7 @@ func TestDecodeSingleMergeRequestItem(t *testing.T) {
 	require.Nil(t, err)
 	mrBody := bytes.NewReader(glMergeRequestsBytes)
 	response := &http.Response{
-		Status:     "200 OK",
+		Status:     http.StatusText(http.StatusOK),
 		StatusCode: http.StatusOK,
 		Body:       io.NopCloser(mrBody),
 	}

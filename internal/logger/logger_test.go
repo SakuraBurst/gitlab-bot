@@ -91,8 +91,8 @@ func TestFatalNotifierHookTelegramError(t *testing.T) {
 	clients.EnableMock()
 	clients.Mocks.AddMock("https://api.telegram.org/bot/sendMessage", clients.Mock{
 		Response: &http.Response{
-			Status:     "401 Unauthorized",
-			StatusCode: 401,
+			Status:     http.StatusText(http.StatusUnauthorized),
+			StatusCode: http.StatusUnauthorized,
 			Body:       readCloser,
 		},
 		Err: nil,
@@ -122,8 +122,8 @@ func TestFatalNotifierHook(t *testing.T) {
 		clients.EnableMock()
 		clients.Mocks.AddMock("https://api.telegram.org/bot/sendMessage", clients.Mock{
 			Response: &http.Response{
-				Status:     "200 OK",
-				StatusCode: 200,
+				Status:     http.StatusText(http.StatusOK),
+				StatusCode: http.StatusOK,
 				Body:       readCloser,
 			},
 			Err: nil,
