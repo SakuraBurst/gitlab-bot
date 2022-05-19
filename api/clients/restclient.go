@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"github.com/SakuraBurst/gitlab-bot/internal/helpers"
 	"net"
 	"net/http"
 	"time"
@@ -55,6 +56,7 @@ func EnableMock() {
 
 func DisableMock() {
 	MockEnabled = false
+	Mocks.ClearMocks()
 }
 
 func Post(url string, body interface{}, headers http.Header) (*http.Response, error) {
@@ -72,7 +74,7 @@ func Post(url string, body interface{}, headers http.Header) (*http.Response, er
 		return nil, err
 	}
 	request, err := http.NewRequest(http.MethodPost, url, buffer)
-	request.Header = validHeaders(headers)
+	request.Header = helpers.ValidHeaders(headers)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +90,7 @@ func Get(url string, headers http.Header) (*http.Response, error) {
 		return r.Response, r.Err
 	}
 	request, err := http.NewRequest(http.MethodGet, url, nil)
-	request.Header = validHeaders(headers)
+	request.Header = helpers.ValidHeaders(headers)
 	if err != nil {
 		return nil, err
 	}

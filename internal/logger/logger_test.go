@@ -34,7 +34,6 @@ type LoggerInfoMessage struct {
 func TestInit(t *testing.T) {
 	buffer := bytes.NewBuffer(nil)
 	buffer.WriteString("[\n")
-	currentTime := time.Now().Truncate(time.Second)
 	Init(log.TraceLevel, buffer)
 	log.Info(log.InfoLevel.String())
 	log.Warn(log.WarnLevel.String())
@@ -51,7 +50,6 @@ func TestInit(t *testing.T) {
 	require.Len(t, logs, 6)
 	levels := []string{log.InfoLevel.String(), log.WarnLevel.String(), log.DebugLevel.String(), log.TraceLevel.String(), log.ErrorLevel.String()}
 	for i := 1; i < 6; i++ {
-		assert.Equal(t, logs[i].Time, currentTime)
 		assert.Equal(t, logs[i].Message, levels[i-1])
 		assert.Equal(t, logs[i].Level, levels[i-1])
 	}
@@ -75,7 +73,7 @@ func TestFatalNotifierHookErrorRequest(t *testing.T) {
 		log.Fatal("govno")
 	})
 
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestFatalNotifierHookTelegramError(t *testing.T) {
@@ -106,7 +104,7 @@ func TestFatalNotifierHookTelegramError(t *testing.T) {
 		log.Fatal("govno")
 	})
 
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestFatalNotifierHook(t *testing.T) {

@@ -103,6 +103,7 @@ func TestGetAllOpenedMrsWithDiffs_Error(t *testing.T) {
 	assert.Nil(t, mrsWithDiffs)
 	assert.NotNil(t, err)
 	assert.EqualError(t, err, gle.Error())
+	clients.DisableMock()
 }
 
 func TestGetAllOpenedMrsWithDiffs(t *testing.T) {
@@ -127,7 +128,7 @@ func TestGetAllOpenedMrsWithDiffs(t *testing.T) {
 	assert.NotNil(t, mrsWithDiffs)
 	assert.Nil(t, err)
 	assert.Equal(t, mrsWithDiffs, &mri)
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestGitlab_MergeRequests_Error(t *testing.T) {
@@ -156,7 +157,7 @@ func TestGitlab_MergeRequests_OKWithoutDiffs(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, mri.Length, 2)
 	assert.Equal(t, mri.MergeRequests, glMergeRequests)
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 // наверное это уже функциональные тесты, но мне пофиг
@@ -190,7 +191,7 @@ func TestGitlab_MergeRequests_ErrorWithDiffs(t *testing.T) {
 	assert.Nil(t, mri)
 	assert.NotNil(t, err)
 	assert.EqualError(t, err, gle.Error())
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestGitlab_MergeRequests_OKWithDiffs(t *testing.T) {
@@ -224,5 +225,5 @@ func TestGitlab_MergeRequests_OKWithDiffs(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, mrsWithDiffs.MergeRequests)
 	assert.Equal(t, mrsWithDiffs.MergeRequests[0], mergeRequest)
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }

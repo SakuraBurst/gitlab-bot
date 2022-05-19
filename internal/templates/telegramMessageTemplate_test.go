@@ -115,7 +115,7 @@ func TestTelegramMessageTemplateNewMrWithDiffs(t *testing.T) {
 			CreatedAt:    time.Now(),
 			UpdatedAt:    time.Now(),
 			TargetBranch: "test",
-			SourceBranch: "untest",
+			SourceBranch: "test",
 			Author: models.Author{
 				Name: "Test",
 			},

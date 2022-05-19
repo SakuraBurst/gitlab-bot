@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/SakuraBurst/gitlab-bot/internal/helpers"
 	"github.com/SakuraBurst/gitlab-bot/internal/logger"
+	"github.com/SakuraBurst/gitlab-bot/internal/templates"
 	"github.com/SakuraBurst/gitlab-bot/internal/workers"
 	"github.com/SakuraBurst/gitlab-bot/pkg/basa_dannih"
 	"github.com/SakuraBurst/gitlab-bot/pkg/gitlab"
@@ -77,7 +78,9 @@ func main() {
 			return err
 		}
 		log.WithFields(log.Fields{"Количество новых мрок": mergeRequests.Length}).Info("Ежедневный обход")
-		err = tlBot.SendMergeRequestMessage(mergeRequests, false, git.WithDiffs)
+		openedMrTemplate := templates.GetRightTemplate(false, git.WithDiffs)
+		message := templates.CreateStringFromTemplate(openedMrTemplate, mergeRequests)
+		err = tlBot.SendMessage(message)
 		return err
 	}
 
@@ -91,7 +94,9 @@ func main() {
 		mergeRequests.Length = writtenMrs
 		log.WithFields(log.Fields{"Количество новых мрок": mergeRequests.Length, "Статус": ok}).Info("Ежеминутный обход")
 		if ok {
-			err := tlBot.SendMergeRequestMessage(mergeRequests, true, git.WithDiffs)
+			newMrTemplate := templates.GetRightTemplate(true, git.WithDiffs)
+			message := templates.CreateStringFromTemplate(newMrTemplate, mergeRequests)
+			err := tlBot.SendMessage(message)
 			return err
 		}
 		return nil

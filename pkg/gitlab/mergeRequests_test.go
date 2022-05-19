@@ -40,6 +40,7 @@ func TestGetMRDiffs_BadRequestClosedGoroutine(t *testing.T) {
 	go gitLabMock.getMRWithDiffs(0, resChan, isClosed)
 	time.Sleep(time.Millisecond * 50)
 	assert.Len(t, resChan, 0)
+	clients.DisableMock()
 }
 
 func TestGetMRDiffs_BadBodyClosedGoroutine(t *testing.T) {
@@ -61,6 +62,31 @@ func TestGetMRDiffs_BadBodyClosedGoroutine(t *testing.T) {
 	go gitLabMock.getMRWithDiffs(0, resChan, isClosed)
 	time.Sleep(time.Millisecond * 50)
 	assert.Len(t, resChan, 0)
+	clients.DisableMock()
+}
+
+func TestGetMRDiffs_ClosedGoroutine(t *testing.T) {
+	var isClosed = func() bool {
+		return true
+	}
+	resChan := make(chan MergeRequestTransfer, 1)
+	clients.EnableMock()
+	mergeRequest := models.MergeRequest{}
+	mergeRequestBytes, err := json.Marshal(mergeRequest)
+	require.Nil(t, err)
+	validResponseBody := bytes.NewReader(mergeRequestBytes)
+	clients.Mocks.AddMock(mergeRequestURLMock, clients.Mock{
+		Response: &http.Response{
+			Status:     http.StatusText(http.StatusOK),
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(validResponseBody),
+		},
+		Err: nil,
+	})
+	go gitLabMock.getMRWithDiffs(0, resChan, isClosed)
+	time.Sleep(time.Millisecond * 50)
+	assert.Len(t, resChan, 0)
+	clients.DisableMock()
 }
 
 func TestGetMRDiffs_URLError(t *testing.T) {
@@ -85,7 +111,7 @@ func TestGetMRDiffs_RequestError(t *testing.T) {
 	assert.Nil(t, res.mergeRequest)
 	assert.NotNil(t, res.error)
 	assert.EqualError(t, res.error, mockErr.Error())
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestGetMRDiffs_ErrorWithBodyError(t *testing.T) {
@@ -106,7 +132,7 @@ func TestGetMRDiffs_ErrorWithBodyError(t *testing.T) {
 	assert.Nil(t, res.mergeRequest)
 	assert.NotNil(t, res.error)
 	assert.EqualError(t, res.error, invalidArgumentErrorString)
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestGetMRDiffs_ErrorWithGitlabError(t *testing.T) {
@@ -129,7 +155,7 @@ func TestGetMRDiffs_ErrorWithGitlabError(t *testing.T) {
 	assert.Nil(t, res.mergeRequest)
 	assert.NotNil(t, res.error)
 	assert.EqualError(t, res.error, gle.Error())
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestGetMRDiffs_OKWithBodyError(t *testing.T) {
@@ -150,7 +176,7 @@ func TestGetMRDiffs_OKWithBodyError(t *testing.T) {
 	assert.Nil(t, res.mergeRequest)
 	assert.NotNil(t, res.error)
 	assert.EqualError(t, res.error, invalidArgumentErrorString)
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestGetMRDiffs(t *testing.T) {
@@ -173,7 +199,7 @@ func TestGetMRDiffs(t *testing.T) {
 	assert.NotNil(t, res.mergeRequest)
 	assert.Nil(t, res.error)
 	assert.Equal(t, res.mergeRequest, &mergeRequest)
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 // ALL MERGE REQUESTS
@@ -196,7 +222,7 @@ func TestGetAllOpenedMergeRequests_RequestError(t *testing.T) {
 	assert.Nil(t, mri)
 	assert.NotNil(t, err)
 	assert.EqualError(t, err, mockErr.Error())
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestGetAllOpenedMergeRequests_ErrorWithBodyError(t *testing.T) {
@@ -215,7 +241,7 @@ func TestGetAllOpenedMergeRequests_ErrorWithBodyError(t *testing.T) {
 	assert.Nil(t, mri)
 	assert.NotNil(t, err)
 	assert.EqualError(t, err, invalidArgumentErrorString)
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestGetAllOpenedMergeRequests_ErrorWithGitlabError(t *testing.T) {
@@ -236,7 +262,7 @@ func TestGetAllOpenedMergeRequests_ErrorWithGitlabError(t *testing.T) {
 	assert.Nil(t, mri)
 	assert.NotNil(t, err)
 	assert.EqualError(t, err, gle.Error())
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestGetAllOpenedMergeRequests_OKWithBodyError(t *testing.T) {
@@ -255,7 +281,7 @@ func TestGetAllOpenedMergeRequests_OKWithBodyError(t *testing.T) {
 	assert.Nil(t, mri)
 	assert.NotNil(t, err)
 	assert.EqualError(t, err, invalidArgumentErrorString)
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }
 
 func TestGetAllOpenedMergeRequests(t *testing.T) {
@@ -277,5 +303,5 @@ func TestGetAllOpenedMergeRequests(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, mri.Length, 2)
 	assert.Equal(t, mri.MergeRequests, glMergeRequests)
-	clients.Mocks.ClearMocks()
+	clients.DisableMock()
 }

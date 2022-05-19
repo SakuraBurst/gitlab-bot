@@ -28,7 +28,7 @@ func TestGetMergeRequestURL_OK(t *testing.T) {
 	require.NotNil(t, url)
 	require.NotNil(t, headers)
 	assert.Equal(t, url.String(), mergeRequestsURLMock)
-	assert.Contains(t, headers, "Private-Token")
+	assert.Contains(t, headers, http.CanonicalHeaderKey("PRIVATE-TOKEN"))
 	assert.Equal(t, headers.Get("PRIVATE-TOKEN"), tokenMock)
 	assert.Nil(t, err)
 }
@@ -112,7 +112,7 @@ func TestGetSingleMergeRequestWithChangesURL_OK(t *testing.T) {
 	require.NotNil(t, url)
 	require.NotNil(t, headers)
 	assert.Equal(t, url.String(), mergeRequestURLMock)
-	assert.Contains(t, headers, "Private-Token")
+	assert.Contains(t, headers, http.CanonicalHeaderKey("PRIVATE-TOKEN"))
 	assert.Equal(t, headers.Get("PRIVATE-TOKEN"), tokenMock)
 	assert.Nil(t, err)
 }

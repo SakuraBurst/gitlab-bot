@@ -5,6 +5,8 @@ type Bot struct {
 	mainChannel string
 }
 
+const telegramApi = "https://api.telegram.org"
+
 func NewBot(token, mainChannel string) Bot {
 	return Bot{token: token, mainChannel: mainChannel}
 }

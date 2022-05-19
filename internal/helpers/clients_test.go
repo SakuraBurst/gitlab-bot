@@ -1,4 +1,4 @@
-package clients
+package helpers
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -7,12 +7,12 @@ import (
 )
 
 func TestValidHeadersNil(t *testing.T) {
-	headers := validHeaders(nil)
+	headers := ValidHeaders(nil)
 	assert.NotNil(t, headers)
 }
 
 func TestValidHeadersNotNIl(t *testing.T) {
 	originalHeaders := http.Header{}
-	headers := validHeaders(originalHeaders)
+	headers := ValidHeaders(originalHeaders)
 	assert.Equal(t, originalHeaders, headers)
 }
