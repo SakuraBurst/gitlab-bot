@@ -44,7 +44,7 @@ func TestInit(t *testing.T) {
 	buffer.Truncate(buffer.Len() - 2)
 	buffer.WriteString("\n]")
 	assert.NotEmpty(t, buffer.Bytes(), "Writer не должен быть пустым")
-	assert.GreaterOrEqual(t, 1344, buffer.Len(), "Writer должен быть больше или равен установленной длинны")
+	assert.GreaterOrEqual(t, buffer.Len(), 1344, "Writer должен быть больше или равен установленной длинны")
 	logs := make([]LoggerInfoMessage, 6)
 	err := json.Unmarshal(buffer.Bytes(), &logs)
 	require.Nil(t, err)
