@@ -134,7 +134,8 @@ func TestFatalNotifierHook_Fire_OpenFileError(t *testing.T) {
 	AddHook(fr)
 	absPath, err := filepath.Abs(".")
 	require.Nil(t, err)
-	cantOpenFileErrorStringMock := "open " + absPath + "\\logger.json: The system cannot find the file specified."
+	cantOpenFileErrorStringMock := "open " + filepath.FromSlash(absPath+"\\logger.json: The system cannot find the file specified.")
+
 	assert.PanicsWithError(t, cantOpenFileErrorStringMock, func() {
 		log.Fatal("govno")
 	})
