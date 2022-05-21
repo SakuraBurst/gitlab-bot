@@ -17,13 +17,13 @@ import (
 func TestBot_SendMessage_CreateURLError(t *testing.T) {
 	err := telegramBotInvalidTokenMock.SendMessage("test")
 	assert.NotNil(t, err)
-	assert.EqualError(t, err, invalidURLErrorStringMock)
+	assert.EqualError(t, err, invalidSendMessageURLErrorStringMock)
 }
 
 func TestBot_SendMessage_RequestError(t *testing.T) {
 	clients.EnableMock()
 	responseErr := errors.New("response error")
-	clients.Mocks.AddMock(telegramValidURLMock, clients.Mock{
+	clients.Mocks.AddMock(telegramValidSendMessageURLMock, clients.Mock{
 		Response: nil,
 		Err:      responseErr,
 	})
@@ -43,7 +43,7 @@ func TestBot_SendMessage_TelegramError(t *testing.T) {
 	telegramErrorBytes, err := json.Marshal(telegramError)
 	require.Nil(t, err)
 	telegramErrorBody := bytes.NewReader(telegramErrorBytes)
-	clients.Mocks.AddMock(telegramValidURLMock, clients.Mock{
+	clients.Mocks.AddMock(telegramValidSendMessageURLMock, clients.Mock{
 		Response: &http.Response{
 			Status:     http.StatusText(http.StatusUnauthorized),
 			StatusCode: http.StatusUnauthorized,
@@ -61,7 +61,7 @@ func TestBot_SendMessage_InvalidBody(t *testing.T) {
 	clients.EnableMock()
 	invalidBody, err := os.Open("123sdcfc90")
 	require.NotNil(t, err)
-	clients.Mocks.AddMock(telegramValidURLMock, clients.Mock{
+	clients.Mocks.AddMock(telegramValidSendMessageURLMock, clients.Mock{
 		Response: &http.Response{
 			Status:     http.StatusText(http.StatusOK),
 			StatusCode: http.StatusOK,
@@ -77,7 +77,7 @@ func TestBot_SendMessage_InvalidBody(t *testing.T) {
 func TestBot_SendMessage(t *testing.T) {
 	clients.EnableMock()
 	emptyBody := bytes.NewReader(nil)
-	clients.Mocks.AddMock(telegramValidURLMock, clients.Mock{
+	clients.Mocks.AddMock(telegramValidSendMessageURLMock, clients.Mock{
 		Response: &http.Response{
 			Status:     http.StatusText(http.StatusOK),
 			StatusCode: http.StatusOK,

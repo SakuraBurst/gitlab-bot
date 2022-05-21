@@ -31,7 +31,7 @@ func TestOnlyNewMrsWithWrittenMrs(t *testing.T) {
 	mrs, writtenMrs, ok := OnlyNewMrs([]models.MergeRequest{{
 		Iid: 1337,
 	}}, bd)
-	assert.Equal(t, cap(mrs), 1)
+	assert.Equal(t, 1, cap(mrs))
 	assert.Zero(t, writtenMrs)
 	assert.False(t, ok)
 }
@@ -42,8 +42,8 @@ func TestOnlyNewMrsWithUnWrittenMrs(t *testing.T) {
 		Iid: 1337,
 	}}, bd)
 	assert.Len(t, mrs, 1)
-	assert.Equal(t, cap(mrs), 1)
-	assert.Equal(t, 1, writtenMrs)
-	assert.Equal(t, mrs[0].Iid, 1337)
+	assert.Equal(t, 1, cap(mrs))
+	assert.Equal(t, writtenMrs, 1)
+	assert.Equal(t, 1337, mrs[0].Iid)
 	assert.True(t, ok)
 }

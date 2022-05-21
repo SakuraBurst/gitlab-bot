@@ -6,7 +6,7 @@ import (
 	"net/url"
 )
 
-func (t Bot) CreateSendMessageURL() (*url.URL, http.Header, error) {
+func (t Bot) createSendMessageURL() (*url.URL, http.Header, error) {
 	rawUrl := fmt.Sprintf("%s/bot%s/sendMessage", telegramApi, t.token)
 	sendMessageURL, err := url.Parse(rawUrl)
 	if err != nil {

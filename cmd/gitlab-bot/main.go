@@ -6,8 +6,8 @@ import (
 	"github.com/SakuraBurst/gitlab-bot/internal/templates"
 	"github.com/SakuraBurst/gitlab-bot/internal/workers"
 	"github.com/SakuraBurst/gitlab-bot/pkg/basa_dannih"
-	"github.com/SakuraBurst/gitlab-bot/pkg/gitlab"
-	"github.com/SakuraBurst/gitlab-bot/pkg/telegram"
+	"github.com/SakuraBurst/gitlab-bot/pkg/services/gitlab"
+	"github.com/SakuraBurst/gitlab-bot/pkg/services/telegram"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -19,16 +19,18 @@ const True = "true"
 
 var envMap map[string]string
 var bd = make(basa_dannih.BasaDannihMySQLPostgresMongoPgAdmin777)
-var neededEnv = []string{"VIEW_CHANGES", "PROJECT", "GITLAB_TOKEN", "TELEGRAM_CHANEL", "TELEGRAM_BOT_TOKEN", "FATAL_REMINDER"}
+var neededEnv = []string{"PROJECT", "GITLAB_TOKEN", "TELEGRAM_CHANEL", "TELEGRAM_BOT_TOKEN", "FATAL_REMINDER"}
 
 func init() {
-	absLoggerFilePath, _ := filepath.Abs("../gitlab-bot/internal/logger/logger.log")
+	absLoggerFilePath, _ := filepath.Abs("../gitlab-bot/internal/logger/logger.json")
 	f, err := os.OpenFile(absLoggerFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
-	absDotEnvPath, _ := filepath.Abs("../gitlab-bot/.env")
-	logger.Init(log.InfoLevel, f)
+	absDotEnvPath, err := filepath.Abs("../gitlab-bot/.env")
+	if err != nil {
+		log.Fatal(err)
+	}
 	err = godotenv.Load(absDotEnvPath)
 	if err != nil {
 		log.Fatal(err)
@@ -38,6 +40,7 @@ func init() {
 		log.Fatal(err)
 	}
 	envMap = helpers.GetEnvMap()
+	logger.Init(logger.GetLogLevel(envMap["IS_PRODUCTION"] == True), f)
 	reminderBot := telegram.NewBot(envMap["TELEGRAM_BOT_TOKEN"], envMap["FATAL_REMINDER"])
 	logger.AddHook(&logger.FatalNotifier{
 		Bot:     reminderBot,

@@ -54,9 +54,9 @@ func TestNewGitlabConn(t *testing.T) {
 	glConn := NewGitlabConn(true, testString, testString, testString)
 	assert.NotNil(t, glConn)
 	assert.True(t, glConn.WithDiffs)
-	assert.Equal(t, glConn.repo, testString)
-	assert.Equal(t, glConn.token, testString)
-	assert.Equal(t, glConn.url, testString)
+	assert.Equal(t, testString, glConn.repo)
+	assert.Equal(t, testString, glConn.token)
+	assert.Equal(t, testString, glConn.url)
 
 }
 
@@ -66,7 +66,7 @@ func TestGetAllOpenedMrsWithDiffs_ZeroMergeRequests(t *testing.T) {
 	}
 	mrsWithDiffs, err := getAllOpenedMrsWithDiffs(gitLabMock, &mri)
 	assert.Nil(t, err)
-	assert.Equal(t, mrsWithDiffs, &mri)
+	assert.Equal(t, &mri, mrsWithDiffs)
 }
 
 func TestGetAllOpenedMrsWithDiffs_Error(t *testing.T) {
@@ -127,7 +127,7 @@ func TestGetAllOpenedMrsWithDiffs(t *testing.T) {
 	mrsWithDiffs, err := getAllOpenedMrsWithDiffs(gitLabMock, &mri)
 	assert.NotNil(t, mrsWithDiffs)
 	assert.Nil(t, err)
-	assert.Equal(t, mrsWithDiffs, &mri)
+	assert.Equal(t, &mri, mrsWithDiffs)
 	clients.DisableMock()
 }
 
@@ -155,8 +155,8 @@ func TestGitlab_MergeRequests_OKWithoutDiffs(t *testing.T) {
 	mri, err := gitLabMock.MergeRequests()
 	assert.NotNil(t, mri)
 	assert.Nil(t, err)
-	assert.Equal(t, mri.Length, 2)
-	assert.Equal(t, mri.MergeRequests, glMergeRequests)
+	assert.Equal(t, 2, mri.Length)
+	assert.Equal(t, glMergeRequests, mri.MergeRequests)
 	clients.DisableMock()
 }
 
@@ -224,6 +224,6 @@ func TestGitlab_MergeRequests_OKWithDiffs(t *testing.T) {
 	assert.NotNil(t, mrsWithDiffs)
 	assert.Nil(t, err)
 	assert.NotNil(t, mrsWithDiffs.MergeRequests)
-	assert.Equal(t, mrsWithDiffs.MergeRequests[0], mergeRequest)
+	assert.Equal(t, mergeRequest, mrsWithDiffs.MergeRequests[0])
 	clients.DisableMock()
 }

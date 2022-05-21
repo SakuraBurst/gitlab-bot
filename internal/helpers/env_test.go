@@ -22,7 +22,7 @@ func TestCheckForEnvError(t *testing.T) {
 	err := CheckForEnv(neededEnv)
 	assert.NotNil(t, err)
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), "Отсутствует TestCheckForEnvError")
+	assert.Equal(t, "Отсутствует TestCheckForEnvError", err.Error())
 }
 
 func TestCheckForEnvOK(t *testing.T) {

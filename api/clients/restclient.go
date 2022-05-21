@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/SakuraBurst/gitlab-bot/internal/helpers"
+	"io"
 	"net"
 	"net/http"
 	"time"
@@ -74,6 +75,22 @@ func Post(url string, body interface{}, headers http.Header) (*http.Response, er
 		return nil, err
 	}
 	request, err := http.NewRequest(http.MethodPost, url, buffer)
+	request.Header = helpers.ValidHeaders(headers)
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(request)
+}
+
+func PostStream(url string, body io.Reader, headers http.Header) (*http.Response, error) {
+	if MockEnabled {
+		r, ok := Mocks[url]
+		if !ok {
+			return nil, errors.New("нет такого реквеста в моках: " + url)
+		}
+		return r.Response, r.Err
+	}
+	request, err := http.NewRequest(http.MethodPost, url, body)
 	request.Header = helpers.ValidHeaders(headers)
 	if err != nil {
 		return nil, err

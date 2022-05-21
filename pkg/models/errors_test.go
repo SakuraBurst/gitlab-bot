@@ -8,7 +8,7 @@ import (
 func TestGitlabError_Error(t *testing.T) {
 	glError := GitlabError{Message: "test"}
 	assert.Error(t, glError)
-	assert.Equal(t, glError.Error(), "test")
+	assert.Equal(t, "test", glError.Error())
 }
 
 func TestTelegramError_Error(t *testing.T) {
@@ -18,5 +18,5 @@ func TestTelegramError_Error(t *testing.T) {
 		Description: "test",
 	}
 	assert.Error(t, tlError)
-	assert.Equal(t, tlError.Error(), "Code 401, Message: test")
+	assert.EqualError(t, tlError, "Code 401, Message: test")
 }

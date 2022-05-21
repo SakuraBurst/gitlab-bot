@@ -13,7 +13,7 @@ import (
 )
 
 func TestConstants(t *testing.T) {
-	assert.Equal(t, OPENED, "opened")
+	assert.Equal(t, "opened", OPENED)
 }
 
 func TestGetMergeRequestURL_URL_Error(t *testing.T) {
@@ -27,9 +27,9 @@ func TestGetMergeRequestURL_OK(t *testing.T) {
 	url, headers, err := gitLabMock.getMergeRequestURL()
 	require.NotNil(t, url)
 	require.NotNil(t, headers)
-	assert.Equal(t, url.String(), mergeRequestsURLMock)
+	assert.Equal(t, mergeRequestsURLMock, url.String())
 	assert.Contains(t, headers, http.CanonicalHeaderKey("PRIVATE-TOKEN"))
-	assert.Equal(t, headers.Get("PRIVATE-TOKEN"), tokenMock)
+	assert.Equal(t, tokenMock, headers.Get("PRIVATE-TOKEN"))
 	assert.Nil(t, err)
 }
 
@@ -37,7 +37,7 @@ func TestDecodeMergeRequestInfoNilRequest(t *testing.T) {
 	mri, err := decodeMergeRequestsInfo(nil)
 	assert.Nil(t, mri)
 	require.NotNil(t, err)
-	assert.Equal(t, err.Error(), "request is nil")
+	assert.Equal(t, "request is nil", err.Error())
 }
 
 func TestDecodeMergeRequestInfoErr_BodyError(t *testing.T) {
@@ -95,8 +95,8 @@ func TestDecodeMergeRequestInfo(t *testing.T) {
 	mri, err := decodeMergeRequestsInfo(response)
 	assert.NotNil(t, mri)
 	assert.Nil(t, err)
-	assert.Equal(t, mri.Length, 2)
-	assert.Equal(t, mri.MergeRequests, glMergeRequests)
+	assert.Equal(t, 2, mri.Length)
+	assert.Equal(t, glMergeRequests, mri.MergeRequests)
 }
 
 func TestGetSingleMergeRequestWithChangesURL_URL_Error(t *testing.T) {
@@ -111,9 +111,9 @@ func TestGetSingleMergeRequestWithChangesURL_OK(t *testing.T) {
 	url, headers, err := gitLabMock.getSingleMergeRequestWithChangesURL(0)
 	require.NotNil(t, url)
 	require.NotNil(t, headers)
-	assert.Equal(t, url.String(), mergeRequestURLMock)
+	assert.Equal(t, mergeRequestURLMock, url.String())
 	assert.Contains(t, headers, http.CanonicalHeaderKey("PRIVATE-TOKEN"))
-	assert.Equal(t, headers.Get("PRIVATE-TOKEN"), tokenMock)
+	assert.Equal(t, tokenMock, headers.Get("PRIVATE-TOKEN"))
 	assert.Nil(t, err)
 }
 
@@ -172,5 +172,5 @@ func TestDecodeSingleMergeRequestItem(t *testing.T) {
 	mr, err := decodeSingleMergeRequestItem(response)
 	assert.NotNil(t, mr)
 	assert.Nil(t, err)
-	assert.Equal(t, mr, glMergeRequest)
+	assert.Equal(t, glMergeRequest, mr)
 }

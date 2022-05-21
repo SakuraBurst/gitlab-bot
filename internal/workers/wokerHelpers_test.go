@@ -8,8 +8,8 @@ import (
 )
 
 func TestConstants(t *testing.T) {
-	assert.Equal(t, fullDay, 24)
-	assert.Equal(t, maxPossibleErrors, 100)
+	assert.Equal(t, 24, fullDay)
+	assert.Equal(t, 100, maxPossibleErrors)
 }
 
 func TestErrorCheckerNoErrors(t *testing.T) {
@@ -18,7 +18,7 @@ func TestErrorCheckerNoErrors(t *testing.T) {
 	go errorChecker(nil, stopChan)
 	time.Sleep(time.Millisecond * 50)
 	assert.Len(t, stopChan, 0)
-	assert.Equal(t, errorCounter, 0)
+	assert.Equal(t, 0, errorCounter)
 	errorCounter = 0
 }
 
@@ -28,7 +28,7 @@ func TestErrorChecker99ErrorsAndOneNil(t *testing.T) {
 	go errorChecker(nil, stopChan)
 	time.Sleep(time.Millisecond * 50)
 	assert.Len(t, stopChan, 0)
-	assert.Equal(t, errorCounter, 0)
+	assert.Equal(t, 0, errorCounter)
 }
 
 func TestErrorCheckerFinalError(t *testing.T) {
@@ -38,5 +38,5 @@ func TestErrorCheckerFinalError(t *testing.T) {
 	time.Sleep(time.Millisecond * 50)
 	assert.Len(t, stopChan, 1)
 	assert.NotNil(t, <-stopChan)
-	assert.Equal(t, errorCounter, 100)
+	assert.Equal(t, 100, errorCounter)
 }

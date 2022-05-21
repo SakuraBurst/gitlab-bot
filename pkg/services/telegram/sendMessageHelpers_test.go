@@ -11,28 +11,29 @@ var telegramBotMock = Bot{
 	mainChannel: "1",
 }
 
-var telegramValidURLMock = "https://api.telegram.org/bot1/sendMessage"
+var telegramValidSendMessageURLMock = "https://api.telegram.org/bot1/sendMessage"
 
 var telegramBotInvalidTokenMock = Bot{
 	token:       "_394e2904dfsfs234)Ue)R(UEWR#$%@%",
 	mainChannel: "",
 }
 
-var invalidURLErrorStringMock = "parse \"https://api.telegram.org/bot_394e2904dfsfs234)Ue)R(UEWR#$%@%/sendMessage\": invalid URL escape \"%@%\""
+var invalidSendMessageURLErrorStringMock = "parse \"https://api.telegram.org/bot_394e2904dfsfs234)Ue)R(UEWR#$%@%/sendMessage\": invalid URL escape \"%@%\""
 
 func TestBot_CreateSendMessageURL_InvalidURL(t *testing.T) {
-	sendMessageURL, headers, err := telegramBotInvalidTokenMock.CreateSendMessageURL()
+	sendMessageURL, headers, err := telegramBotInvalidTokenMock.createSendMessageURL()
 	assert.Nil(t, sendMessageURL)
 	assert.Nil(t, headers)
 	assert.NotNil(t, err)
-	assert.EqualError(t, err, invalidURLErrorStringMock)
+	assert.EqualError(t, err, invalidSendMessageURLErrorStringMock)
 }
 
 func TestBot_CreateSendMessageURL(t *testing.T) {
-	sendMessageURL, headers, err := telegramBotMock.CreateSendMessageURL()
+	sendMessageURL, headers, err := telegramBotMock.createSendMessageURL()
 	assert.NotNil(t, sendMessageURL)
 	assert.NotNil(t, headers)
 	assert.Nil(t, err)
-	assert.Equal(t, sendMessageURL.String(), telegramValidURLMock)
+	assert.Equal(t, telegramValidSendMessageURLMock, sendMessageURL.String())
 	assert.Contains(t, headers, http.CanonicalHeaderKey("content-type"))
+	assert.Equal(t, "application/json", headers.Get("content-type"))
 }

@@ -14,5 +14,5 @@ func TestOneMinuteWorker(t *testing.T) {
 	}
 	go OneMinuteWorker(nil, TestWorkerFuncError)
 	time.Sleep(time.Millisecond * 50)
-	assert.Equal(t, counter, 1)
+	assert.Equal(t, 1, counter)
 }

@@ -16,7 +16,7 @@ func TestFullDayWorkerOneHourUp(t *testing.T) {
 	currentTime := time.Now().Add(time.Hour)
 	go FullDayWorker(nil, TestWorkerFuncError, currentTime.Hour())
 	time.Sleep(time.Millisecond * 50)
-	assert.Equal(t, counter, 0)
+	assert.Equal(t, 0, counter)
 }
 
 func TestFullDayWorkerOneHourDown(t *testing.T) {
@@ -29,7 +29,7 @@ func TestFullDayWorkerOneHourDown(t *testing.T) {
 	fmt.Println(currentTime.Hour())
 	go FullDayWorker(nil, TestWorkerFuncError, currentTime.Hour())
 	time.Sleep(time.Millisecond * 50)
-	assert.Equal(t, counter, 0)
+	assert.Equal(t, 0, counter)
 }
 
 func TestFullDayWorkerWithWakeUp(t *testing.T) {
@@ -41,7 +41,7 @@ func TestFullDayWorkerWithWakeUp(t *testing.T) {
 	currentTime := time.Now()
 	go FullDayWorker(nil, TestWorkerFuncError, currentTime.Hour())
 	time.Sleep(time.Millisecond * 50)
-	assert.Equal(t, counter, 1)
+	assert.Equal(t, 1, counter)
 }
 
 func TestFullDayWorkerWeekend(t *testing.T) {
@@ -53,5 +53,5 @@ func TestFullDayWorkerWeekend(t *testing.T) {
 	currentTime := time.Now()
 	go FullDayWorker(nil, TestWorkerFuncError, currentTime.Hour())
 	time.Sleep(time.Millisecond * 50)
-	assert.Equal(t, counter, 1)
+	assert.Equal(t, 1, counter)
 }

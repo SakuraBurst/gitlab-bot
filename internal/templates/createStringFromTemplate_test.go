@@ -1,8 +1,8 @@
 package templates
 
 import (
-	"github.com/SakuraBurst/gitlab-bot/pkg/gitlab"
 	"github.com/SakuraBurst/gitlab-bot/pkg/models"
+	"github.com/SakuraBurst/gitlab-bot/pkg/services/gitlab"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

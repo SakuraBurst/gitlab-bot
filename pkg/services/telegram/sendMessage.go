@@ -2,17 +2,18 @@ package telegram
 
 import (
 	"github.com/SakuraBurst/gitlab-bot/api/clients"
+	"github.com/SakuraBurst/gitlab-bot/pkg/models"
 	log "github.com/sirupsen/logrus"
 )
 
 func (t Bot) SendMessage(text string) error {
-	tgRequest := map[string]string{
-		"chat_id":    t.mainChannel,
-		"text":       text,
-		"parse_mode": "html",
+	tgRequest := models.TelegramMessageRequest{
+		ChatID:    t.mainChannel,
+		Text:      text,
+		ParseMode: "html",
 	}
 	log.WithFields(log.Fields{"tgRequest": tgRequest}).Info("начата отправка сообщения в телеграм")
-	sendMessageURL, headers, err := t.CreateSendMessageURL()
+	sendMessageURL, headers, err := t.createSendMessageURL()
 	if err != nil {
 		return err
 	}

@@ -198,7 +198,7 @@ func TestGetMRDiffs(t *testing.T) {
 	res := <-resChan
 	assert.NotNil(t, res.mergeRequest)
 	assert.Nil(t, res.error)
-	assert.Equal(t, res.mergeRequest, &mergeRequest)
+	assert.Equal(t, &mergeRequest, res.mergeRequest)
 	clients.DisableMock()
 }
 
@@ -301,7 +301,7 @@ func TestGetAllOpenedMergeRequests(t *testing.T) {
 	mri, err := gitLabMock.getAllOpenedMergeRequests()
 	assert.NotNil(t, mri)
 	assert.Nil(t, err)
-	assert.Equal(t, mri.Length, 2)
-	assert.Equal(t, mri.MergeRequests, glMergeRequests)
+	assert.Equal(t, 2, mri.Length)
+	assert.Equal(t, glMergeRequests, mri.MergeRequests)
 	clients.DisableMock()
 }

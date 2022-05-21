@@ -1,11 +1,11 @@
 package logger
 
 import (
-	"github.com/SakuraBurst/gitlab-bot/pkg/telegram"
+	"github.com/SakuraBurst/gitlab-bot/pkg/services/telegram"
 	log "github.com/sirupsen/logrus"
 	"io"
-	"net/http"
 	"os"
+	"path/filepath"
 )
 
 type FixedJSONFormatter struct {
@@ -34,6 +34,13 @@ func AddHook(hook log.Hook) {
 	log.AddHook(hook)
 }
 
+func GetLogLevel(isProduction bool) log.Level {
+	if isProduction {
+		return log.ErrorLevel
+	}
+	return log.InfoLevel
+}
+
 type FatalNotifier struct {
 	Bot     telegram.Bot
 	LogFile *os.File
@@ -44,9 +51,24 @@ func (f *FatalNotifier) Levels() []log.Level {
 }
 
 func (f *FatalNotifier) Fire(entry *log.Entry) error {
-	headers := make(http.Header)
-	headers.Set("Content-Type", "application/json")
 	err := f.Bot.SendMessage(entry.Message)
+	if err != nil {
+		panic(err)
+	}
+	absLoggerFilePath, err := filepath.Abs("logger.json")
+	if err != nil {
+		panic(err)
+	}
+	file, err := os.Open(absLoggerFilePath)
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Info(err)
+		}
+	}()
+	if err != nil {
+		panic(err)
+	}
+	err = f.Bot.SendDocument(file, filepath.Base(file.Name()))
 	if err != nil {
 		panic(err)
 	}

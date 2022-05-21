@@ -14,5 +14,5 @@ func TestValidHeadersNil(t *testing.T) {
 func TestValidHeadersNotNIl(t *testing.T) {
 	originalHeaders := http.Header{}
 	headers := ValidHeaders(originalHeaders)
-	assert.Equal(t, originalHeaders, headers)
+	assert.Equal(t, headers, originalHeaders)
 }

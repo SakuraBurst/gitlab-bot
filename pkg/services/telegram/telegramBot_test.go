@@ -8,6 +8,6 @@ import (
 func TestNewBot(t *testing.T) {
 	testString := "test"
 	bot := NewBot(testString, testString)
-	assert.Equal(t, bot.token, testString)
-	assert.Equal(t, bot.mainChannel, testString)
+	assert.Equal(t, testString, bot.token)
+	assert.Equal(t, testString, bot.mainChannel)
 }
