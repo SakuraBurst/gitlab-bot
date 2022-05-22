@@ -32,9 +32,35 @@ type LoggerInfoMessage struct {
 	Time     time.Time `json:"time"`
 }
 
+func TestInit_WriterPanic(t *testing.T) {
+	assert.Panics(t, func() {
+		Init(log.TraceLevel, nil)
+	})
+}
+
+type closedWriter struct {
+	buffer *bytes.Buffer
+	limit  int
+}
+
+func (cw *closedWriter) Write(data []byte) (int, error) {
+	if cw.buffer.Len() >= cw.limit {
+		return 0, io.EOF
+	}
+	return cw.buffer.Write(data)
+}
+
+func TestInit_WriterPanic2(t *testing.T) {
+	cw := &closedWriter{
+		buffer: bytes.NewBuffer(nil),
+	}
+	assert.PanicsWithError(t, io.EOF.Error(), func() {
+		Init(log.TraceLevel, cw)
+	})
+}
+
 func TestInit(t *testing.T) {
 	buffer := bytes.NewBuffer(nil)
-	buffer.WriteString("[\n")
 	Init(log.TraceLevel, buffer)
 	log.Info(log.InfoLevel.String())
 	log.Warn(log.WarnLevel.String())
@@ -143,6 +169,36 @@ func TestFatalNotifierHook_Fire_OpenFileError(t *testing.T) {
 	clients.DisableMock()
 }
 
+func TestFatalNotifierHook_Fire_TruncateError(t *testing.T) {
+	clients.EnableMock()
+	reader := bytes.NewReader(nil)
+	clients.Mocks.AddMock("https://api.telegram.org/bot/sendMessage", clients.Mock{
+		Response: &http.Response{
+			Status:     http.StatusText(http.StatusOK),
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(reader),
+		},
+		Err: nil,
+	})
+	fr := &FatalNotifier{
+		Bot:     telegram.Bot{},
+		LogFile: nil,
+	}
+	AddHook(fr)
+	absPath, err := filepath.Abs("logger.json")
+	require.Nil(t, err)
+	file, err := os.OpenFile(absPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	require.Nil(t, err)
+	assert.Panics(t, func() {
+		log.Fatal("govno")
+	})
+	err = file.Close()
+	require.Nil(t, err)
+	err = os.Remove(absPath)
+	require.Nil(t, err)
+	clients.DisableMock()
+}
+
 func TestFatalNotifierHook_Fire_SendFileError(t *testing.T) {
 	clients.EnableMock()
 	reader := bytes.NewReader(nil)
@@ -166,7 +222,9 @@ func TestFatalNotifierHook_Fire_SendFileError(t *testing.T) {
 	AddHook(fr)
 	absPath, err := filepath.Abs("logger.json")
 	require.Nil(t, err)
-	file, err := os.Create(absPath)
+	file, err := os.OpenFile(absPath, os.O_CREATE|os.O_RDWR, os.ModePerm)
+	require.Nil(t, err)
+	_, err = file.Write([]byte{1, 1, 1})
 	require.Nil(t, err)
 	assert.PanicsWithError(t, errorMock.Error(), func() {
 		log.Fatal("govno")
@@ -201,7 +259,9 @@ func TestFatalNotifierHook_Fire(t *testing.T) {
 			LogFile: nil,
 		}
 		require.Nil(t, err)
-		_, err := os.Create(absPath)
+		file, err := os.OpenFile(absPath, os.O_CREATE|os.O_RDWR, os.ModePerm)
+		require.Nil(t, err)
+		_, err = file.Write([]byte{1, 1, 1})
 		require.Nil(t, err)
 		AddHook(fr)
 		log.Fatal("govno")

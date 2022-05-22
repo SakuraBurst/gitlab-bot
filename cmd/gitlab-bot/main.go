@@ -23,7 +23,7 @@ var neededEnv = []string{"PROJECT", "GITLAB_TOKEN", "TELEGRAM_CHANEL", "TELEGRAM
 
 func init() {
 	absLoggerFilePath, _ := filepath.Abs("../gitlab-bot/internal/logger/logger.json")
-	f, err := os.OpenFile(absLoggerFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	f, err := os.OpenFile(absLoggerFilePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		log.Fatal(err)
 	}

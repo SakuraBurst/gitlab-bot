@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/SakuraBurst/gitlab-bot/internal/helpers"
 	"github.com/SakuraBurst/gitlab-bot/pkg/services/telegram"
 	log "github.com/sirupsen/logrus"
 	"io"
@@ -25,6 +26,10 @@ func (f *FixedJSONFormatter) Format(entry *log.Entry) ([]byte, error) {
 func Init(level log.Level, output io.Writer) {
 	log.SetReportCaller(true)
 	log.SetFormatter(&FixedJSONFormatter{log.JSONFormatter{PrettyPrint: true}})
+	_, err := output.Write([]byte{'[', '\n'})
+	if err != nil {
+		panic(err)
+	}
 	log.SetOutput(output)
 	log.Info("Логер инициализирован")
 	log.SetLevel(level)
@@ -59,12 +64,22 @@ func (f *FatalNotifier) Fire(entry *log.Entry) error {
 	if err != nil {
 		panic(err)
 	}
-	file, err := os.Open(absLoggerFilePath)
+	file, err := os.OpenFile(absLoggerFilePath, os.O_RDWR, os.ModePerm)
 	defer func() {
 		if err := file.Close(); err != nil {
 			log.Info(err)
 		}
 	}()
+	if err != nil {
+		panic(err)
+	}
+	fileStats := helpers.FileStatMust(file)
+	log.Info(fileStats.Size())
+	err = file.Truncate(fileStats.Size() - 2)
+	if err != nil {
+		panic(err)
+	}
+	_, err = file.Write([]byte{']', '\n'})
 	if err != nil {
 		panic(err)
 	}
