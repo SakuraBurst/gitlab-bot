@@ -59,7 +59,7 @@ var TelegramMessageTemplateNewMrWithoutDiffs = template.Must(template.New("Teleg
 }).Parse(`
 {{.MergeRequests | newMrTitle}}
 {{range .MergeRequests}}------------------------------------
-<b>{{.Title}}</b>, {{lastUpdate .CreatedAt .UpdatedAt }}, 
+<b>{{.Title}}</b>, {{lastUpdate .CreatedAt .UpdatedAt | humanTime}}, 
 <i>{{.Description}}</i>
 
 Автор: {{.Author.Name}}
@@ -81,7 +81,7 @@ var TelegramMessageTemplateWithDiffs = template.Must(template.New("TelegramMessa
 }).Parse(`
 Текущее количество открытых MR на {{.On | humanTime}} - {{.Length}}
 {{range .MergeRequests}}------------------------------------
-<b>{{.Title}}</b>, {{lastUpdate .CreatedAt .UpdatedAt }}, 
+<b>{{.Title}}</b>, {{lastUpdate .CreatedAt .UpdatedAt | humanTime}}, 
 <i>{{.Description}}</i>
 
 Автор: {{.Author.Name}}
@@ -107,7 +107,7 @@ var TelegramMessageTemplateWithoutDiffs = template.Must(template.New("TelegramMe
 }).Parse(`
 Текущее количество открытых MR на {{.On | humanTime}} - {{.Length}}
 {{range .MergeRequests}}------------------------------------
-<b>{{.Title}}</b>, {{lastUpdate .CreatedAt .UpdatedAt }}, 
+<b>{{.Title}}</b>, {{lastUpdate .CreatedAt .UpdatedAt | humanTime }}, 
 <i>{{.Description}}</i>
 
 Автор: {{.Author.Name}}
