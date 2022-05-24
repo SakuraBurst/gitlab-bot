@@ -33,7 +33,7 @@ func init() {
 	}
 	err = godotenv.Load(absDotEnvPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
 	}
 	err = helpers.CheckForEnv(neededEnv)
 	if err != nil {
